@@ -10,8 +10,10 @@ import os
 from django.conf import settings
 from django.conf.urls.static import static
 import openpyxl
+from openpyxl import load_workbook
 from openpyxl.utils import (_get_column_letter)
 from django.views.static import serve
+import unicodedata
 
 
 
@@ -41,6 +43,28 @@ def isCellFormula(cell):
     return False
 
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+ 
+    try:
+        unicodedata.numeric(s)
+        return True
+    except (TypeError, ValueError):
+        pass
+ 
+    return False
+
+def isCellNumber(cell):
+    val = str(cell.value)
+    if(is_number(val)==True):
+        return True
+
+    return False
+    
 def isCellConnected(sheet,col,row):
 
     hr=sheet.get_highest_row()+1
@@ -70,58 +94,102 @@ def isCellConnected(sheet,col,row):
     return False
 
 
-def cellRefferendinSheet(sheet,cell):
+def findTopVaiable(sheet, cell, col, row):
+    
+    for row in range(row,0,-1):
+        if(isCellEmpty(sheet.cell(column=col, row=row))==True):
+            continue
+        value=str(sheet.cell(column=col, row=row).value)
+        cell=sheet.cell(column=col, row=row)
+        if(isCellFormula(cell)==False):
+            if(is_number(value)==False):
+                return value
+    
+    return "No Top Heading"
+def findLeftVaiable(sheet, cell, col, row):
+    
+    for col in range(col,0,-1):
+        if(isCellEmpty(sheet.cell(column=col, row=row))==True):
+            continue
+        value=str(sheet.cell(column=col, row=row).value)
+        cell=sheet.cell(column=col, row=row)
+        if(isCellFormula(cell)==False):
+            if(is_number(value)==False):
+                return value
+    
+    return "No Left Heading"
+
+def cellNumberUsedInSheet(sheet,cell,colv,rowv):
+    
+     for row in sheet.rows:
+        for cellRow in row:
+            cellValue=str(cellRow.value)
+            cellCordinate=str(cell.coordinate)
+            if ( cellValue.find(cellCordinate)>-1 & cellValue.find("!")==-1):
+                return "("+str(cell.value)+")"+"(Intermediate Cell)" + "(Used at:"+cellRow.coordinate+")"+"("+findTopVaiable(sheet,cell,colv,rowv)+")"+"("+findLeftVaiable(sheet,cell,colv,rowv)+")"
+
+     return "("+str(cell.value)+")"+"(Output)" +"("+findTopVaiable(sheet,cell,colv,rowv)+")"+"("+findLeftVaiable(sheet,cell,colv,rowv)+")"
+
+def cellUsedInSheet(sheet,cell,formulaOutput,colv,rowv):
 
     for row in sheet.rows:
         for cellRow in row:
             cellValue=str(cellRow.value)
             cellCordinate=str(cell.coordinate)
             if ( cellValue.find(cellCordinate)>-1 & cellValue.find("!")==-1):
-                return "intermidiate equation " + cellRow.coordinate
+                return "("+str(cell.value)+")"+"("+formulaOutput+")"+"(Intermediate Equation)" + "(Used at:"+cellRow.coordinate+")"+"("+findTopVaiable(sheet,cell,colv,rowv)+")"+"("+findLeftVaiable(sheet,cell,colv,rowv)+")"
 
-    return "output"
+    return "("+str(cell.value)+")"+"("+formulaOutput+")"+"(Output)" +"("+findTopVaiable(sheet,cell,colv,rowv)+")"+"("+findLeftVaiable(sheet,cell,colv,rowv)+")"
 
-def getFormulaType(sheet,cell,col,row):
+
+def getFormulaType(sheet,cell,col,row,formulaOutput):
 
     valStr=str(cell.value)
     valCordinate=str(cell.coordinate)
 
     if "!" in valStr:
-        return "input"
-
-    return cellRefferendinSheet(sheet,cell)
+        return "("+valStr+")"+"("+formulaOutput+")"+"(input)"+"("+findTopVaiable(sheet,cell,col,row)+")"+"("+findLeftVaiable(sheet,cell,col,row)+")"
 
 
+    return cellUsedInSheet(sheet,cell,formulaOutput,col,row)
 
-def getGroup(sheet,col,row):
+
+
+def getValue(sheetformula,sheetvalue,col,row):
 
 #Return if Empty
-    if(isCellEmpty(sheet.cell(column=col, row=row))):
-        return sheet.cell(column=col, row=row).value
+    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
+        return sheetformula.cell(column=col, row=row).value
 
 
-    if(isCellFormula(sheet.cell(column=col, row=row))):
-        return getFormulaType(sheet,sheet.cell(column=col, row=row),col,row)
+    if(isCellNumber(sheetformula.cell(column=col, row=row))):
+        return cellNumberUsedInSheet(sheetformula,sheetformula.cell(column=col, row=row),col,row)
     else:
-        if(isCellConnected(sheet,col,row)==False):
-                return str(sheet.cell(column=col, row=row).value)+"(label)"
+        if(isCellFormula(sheetformula.cell(column=col, row=row))):
+            return getFormulaType(sheetformula,sheetformula.cell(column=col, row=row),col,row,str(sheetvalue.cell(column=col, row=row).value))
+        else:
+            if(isCellConnected(sheetformula,col,row)==False):
+                    return str(sheetformula.cell(column=col, row=row).value)+"(label)"
 
-    return str(sheet.cell(column=col, row=row).value)+"(variable)"
+    return str(sheetformula.cell(column=col, row=row).value)+"(variable)"
 
 
 def processWorkBook(path):
     workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
-    workSheet = workBook.get_active_sheet()
+    workSheetFormula = workBook.get_active_sheet()
+    
+    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
+    workSheetValued = workBookValued.get_active_sheet()
 
     processedBook = openpyxl.Workbook()
     processedSheet = processedBook.get_sheet_by_name('Sheet')
 
-    hr=workSheet.get_highest_row()
-    hc=workSheet.get_highest_column()
+    hr=workSheetFormula.get_highest_row()
+    hc=workSheetFormula.get_highest_column()
 
     for row in range(1, hr+1):
-        for col in range(1, hc+1):
-                _ = processedSheet.cell(column=col, row=row, value=getGroup(workSheet,col,row))
+        for col in range(1, hc+1): 
+            _ = processedSheet.cell(column=col, row=row, value=getValue(workSheetFormula,workSheetValued,col,row))
 
 
     processedBook.save(settings.PROJECT_ROOT+"/media/documents/pathoutput.xlsx")
