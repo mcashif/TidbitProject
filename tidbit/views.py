@@ -185,11 +185,17 @@ def getValueEx(sheetformula,sheetvalue,col,row,sheet):
     formula=str(sheetformula.cell(column=col, row=row).value)
     
     if(isCellNumber(sheetformula.cell(column=col, row=row))):
-        val="\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Value"+"\""+","+"\""+value+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Top-Label"+"\""+","+"\""+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Left-Label"+"\""+","+"\""+findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" 
+        val="\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Value"+"\""+","+"\""+value+"\""+","+"\n" \
+            +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Top-Label"+"\""+","+"\""+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" \
+            +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Left-Label"+"\""+","+"\""+findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" 
         return val
     else:
         if(isCellFormula(sheetformula.cell(column=col, row=row))):
-            val="\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Formula"+"\""+","+"\""+formula+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Value"+"\""+","+"\""+value+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Top-Label"+"\""+","+"\""+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Left-Label"+"\""+","+"\""+findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" 
+            val="\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Formula"+"\""+","+"\""+formula+"\""+","+"\n" \
+                +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Value"+"\""+","+"\""+value+"\""+","+"\n" \
+                +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Top-Label"+"\""+","+"\""+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" \
+                +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Left-Label"+"\""+","+"\""+findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" 
+            
             return val
  
 
