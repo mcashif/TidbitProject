@@ -174,6 +174,28 @@ def getValue(sheetformula,sheetvalue,col,row):
     return str(sheetformula.cell(column=col, row=row).value)+"(variable)"
 
 
+def getValueEx(sheetformula,sheetvalue,col,row,sheet):
+
+#Return if Empty
+    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
+        return 0
+
+
+    value=str(sheetvalue.cell(column=col, row=row).value)
+    formula=str(sheetformula.cell(column=col, row=row).value)
+    
+    if(isCellNumber(sheetformula.cell(column=col, row=row))):
+        val="\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Value"+"\""+","+"\""+value+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Top-Label"+"\""+","+"\""+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Left-Label"+"\""+","+"\""+findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" 
+        return val
+    else:
+        if(isCellFormula(sheetformula.cell(column=col, row=row))):
+            val="\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Formula"+"\""+","+"\""+formula+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Value"+"\""+","+"\""+value+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Top-Label"+"\""+","+"\""+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n"+"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Left-Label"+"\""+","+"\""+findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" 
+            return val
+ 
+
+    return 0
+
+
 def processWorkBook(path):
     workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
     workSheetFormula = workBook.get_active_sheet()
@@ -196,7 +218,30 @@ def processWorkBook(path):
 
     return settings.PROJECT_ROOT+"/media/documents/pathoutput.xlsx"
 
+def processWorkBookAll(path):
+    workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
+    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
+    workBookSheets=workBook.get_sheet_names()
+    
+    file = open(settings.PROJECT_ROOT+"/media/documents/newfile.txt", "w")
+    
+    for sheet in workBookSheets:
+    
+        workSheetFormula = workBook.get_sheet_by_name(sheet)
+        workSheetValued = workBookValued.get_sheet_by_name(sheet)
+        hr=workSheetFormula.get_highest_row()
+        hc=workSheetFormula.get_highest_column()
+    
+        for row in range(1, hr+1):
+            for col in range(1, hc+1): 
+                val=getValueEx(workSheetFormula,workSheetValued,col,row,sheet)
+                if(val!=0):
+                    _ = file.write(str(val)+"\n")
 
+
+    file.close()
+
+    return settings.PROJECT_ROOT+"/media/documents/newfile.txt"
 def index(request):
 
     return HttpResponse("Welcome- Under Construction")
@@ -210,7 +255,7 @@ def upload(request):
         if form.is_valid():
             newdoc = ExcelFile(docfile = request.FILES['docfile'])
             newdoc.save()
-            fileSheet=processWorkBook(newdoc.docfile.name)
+            fileSheet=processWorkBookAll(newdoc.docfile.name)
             # Redirect to the document list after POST
             #return HttpResponseRedirect(reverse('tidit.views.upload'))
             return serve(request, os.path.basename(fileSheet), os.path.dirname(fileSheet))
