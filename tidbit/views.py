@@ -215,11 +215,11 @@ def getValueEx2(sheetformula,sheetvalue,col,row,sheet):
     formula=str(sheetformula.cell(column=col, row=row).value)
     
     if(isCellNumber(sheetformula.cell(column=col, row=row))):
-        val={0,sheetformula.cell(column=col, row=row).coordinate,value, sheet,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)}
+        val=[0,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)]
         return val
     else:
         if(isCellFormula(sheetformula.cell(column=col, row=row))):
-            val={1,sheetformula.cell(column=col, row=row).coordinate,formula,value+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)} 
+            val=[1,formula,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)] 
             
             return val
  
@@ -282,8 +282,6 @@ def processWorkBookHdf5(path):
 
     outfile = hdf.File(settings.PROJECT_ROOT+"/media/documents/data.hdf5",'w')
     
-    list={}
-    
     for sheet in workBookSheets:
     
         workSheetFormula = workBook.get_sheet_by_name(sheet)
@@ -291,16 +289,21 @@ def processWorkBookHdf5(path):
         hr=workSheetFormula.get_highest_row()
         hc=workSheetFormula.get_highest_column()
         grp_sheet = outfile.create_group(sheet)
-        
-        count=0;
+
         for row in range(1, hr+1):
             for col in range(1, hc+1): 
-                val=getValueEx(workSheetFormula,workSheetValued,col,row,sheet)
+                val=getValueEx2(workSheetFormula,workSheetValued,col,row,sheet)
                 if(val!=0):
-                    count=count+1
-                    name=str(count)
-                    dset=grp_sheet.create_dataset(name, data=val)
-                    
+                    name=workSheetFormula.cell(column=col, row=row).coordinate
+                    fr=name+"/formula"
+                    va=name+"/value"
+                    tp=name+"/top-label"
+                    lf=name+"/left-label"
+                    if(val[0]==1):
+                        dset=grp_sheet.create_dataset(fr, data=val[1])
+                        dset2=grp_sheet.create_dataset(va, data=val[2])
+                        dset3=grp_sheet.create_dataset(tp, data=val[3])
+                        dset4=grp_sheet.create_dataset(lf, data=val[4])
 
         
     
