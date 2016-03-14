@@ -14,6 +14,9 @@ from openpyxl import load_workbook
 from openpyxl.utils import (_get_column_letter)
 from django.views.static import serve
 import unicodedata
+import h5py as hdf
+from django.utils.encoding import smart_str
+
 
 
 
@@ -201,6 +204,27 @@ def getValueEx(sheetformula,sheetvalue,col,row,sheet):
 
     return 0
 
+def getValueEx2(sheetformula,sheetvalue,col,row,sheet):
+
+#Return if Empty
+    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
+        return 0
+
+
+    value=str(sheetvalue.cell(column=col, row=row).value)
+    formula=str(sheetformula.cell(column=col, row=row).value)
+    
+    if(isCellNumber(sheetformula.cell(column=col, row=row))):
+        val={0,sheetformula.cell(column=col, row=row).coordinate,value, sheet,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)}
+        return val
+    else:
+        if(isCellFormula(sheetformula.cell(column=col, row=row))):
+            val={1,sheetformula.cell(column=col, row=row).coordinate,formula,value+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)} 
+            
+            return val
+ 
+
+    return 0
 
 def processWorkBook(path):
     workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
@@ -230,14 +254,14 @@ def processWorkBookAll(path):
     workBookSheets=workBook.get_sheet_names()
     
     file = open(settings.PROJECT_ROOT+"/media/documents/newfile.txt", "w")
-    
+
     for sheet in workBookSheets:
     
         workSheetFormula = workBook.get_sheet_by_name(sheet)
         workSheetValued = workBookValued.get_sheet_by_name(sheet)
         hr=workSheetFormula.get_highest_row()
         hc=workSheetFormula.get_highest_column()
-    
+        
         for row in range(1, hr+1):
             for col in range(1, hc+1): 
                 val=getValueEx(workSheetFormula,workSheetValued,col,row,sheet)
@@ -248,6 +272,42 @@ def processWorkBookAll(path):
     file.close()
 
     return settings.PROJECT_ROOT+"/media/documents/newfile.txt"
+
+
+def processWorkBookHdf5(path):
+    workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
+    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
+    workBookSheets=workBook.get_sheet_names()
+
+
+    outfile = hdf.File(settings.PROJECT_ROOT+"/media/documents/data.hdf5",'w')
+    
+    list={}
+    
+    for sheet in workBookSheets:
+    
+        workSheetFormula = workBook.get_sheet_by_name(sheet)
+        workSheetValued = workBookValued.get_sheet_by_name(sheet)
+        hr=workSheetFormula.get_highest_row()
+        hc=workSheetFormula.get_highest_column()
+        grp_sheet = outfile.create_group(sheet)
+        
+        count=0;
+        for row in range(1, hr+1):
+            for col in range(1, hc+1): 
+                val=getValueEx(workSheetFormula,workSheetValued,col,row,sheet)
+                if(val!=0):
+                    count=count+1
+                    name=str(count)
+                    dset=grp_sheet.create_dataset(name, data=val)
+                    
+
+        
+    
+    outfile.close()
+    
+    return settings.PROJECT_ROOT+"/media/documents/data.hdf5"
+
 def index(request):
 
     return HttpResponse("Welcome- Under Construction")
@@ -261,11 +321,15 @@ def upload(request):
         if form.is_valid():
             newdoc = ExcelFile(docfile = request.FILES['docfile'])
             newdoc.save()
-            fileSheet=processWorkBookAll(newdoc.docfile.name)
+            file=processWorkBookHdf5(newdoc.docfile.name)
             # Redirect to the document list after POST
             #return HttpResponseRedirect(reverse('tidit.views.upload'))
-            return serve(request, os.path.basename(fileSheet), os.path.dirname(fileSheet))
-            #HttpResponse(processfile(newdoc.docfile.name))
+            path = settings.PROJECT_ROOT+"/media/documents/data.hdf5"
+            response = HttpResponse()
+            response['X-Sendfile'] = smart_str(path)
+            response['Content-Type'] = "data/hdf5"
+            response['Content-Length'] = os.stat(path).st_size
+            return response
     else:
         form = DocumentForm() # A empty, unbound form
 
