@@ -322,14 +322,8 @@ def upload(request):
             newdoc = ExcelFile(docfile = request.FILES['docfile'])
             newdoc.save()
             file=processWorkBookHdf5(newdoc.docfile.name)
-            # Redirect to the document list after POST
-            #return HttpResponseRedirect(reverse('tidit.views.upload'))
-            path = settings.PROJECT_ROOT+"/media/documents/data.hdf5"
-            response = HttpResponse()
-            response['X-Sendfile'] = smart_str(path)
-            response['Content-Type'] = "data/hdf5"
-            response['Content-Length'] = os.stat(path).st_size
-            return response
+            newdoc2 = ExcelFile(file_name="download",docfile = "/media/documents/data.hdf5")
+            newdoc2.save()
     else:
         form = DocumentForm() # A empty, unbound form
 
