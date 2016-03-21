@@ -226,6 +226,28 @@ def getValueEx2(sheetformula,sheetvalue,col,row,sheet):
 
     return 0
 
+def getValueEx3(sheetformula,sheetvalue,col,row,sheet):
+
+#Return if Empty
+    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
+        return 0
+
+
+    value=str(sheetvalue.cell(column=col, row=row).value)
+    formula=str(sheetformula.cell(column=col, row=row).value)
+    
+    if(isCellNumber(sheetformula.cell(column=col, row=row))):
+        val=[0,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)]
+        return val
+    else:
+        if(isCellFormula(sheetformula.cell(column=col, row=row))):
+            val=[1,formula,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)] 
+            
+            return val
+ 
+
+    return 0
+
 def processWorkBook(path):
     workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
     workSheetFormula = workBook.get_active_sheet()
@@ -311,6 +333,51 @@ def processWorkBookHdf5(path):
     
     return settings.PROJECT_ROOT+"/media/documents/data.hdf5"
 
+
+def processWorkBookHdf5Ex(path):
+    workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
+    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
+    workBookSheets=workBook.get_sheet_names()
+
+
+    outfile = hdf.File(settings.PROJECT_ROOT+"/media/documents/data.hdf5",'w')
+    
+    for sheet in workBookSheets:
+    
+        workSheetFormula = workBook.get_sheet_by_name(sheet)
+        workSheetValued = workBookValued.get_sheet_by_name(sheet)
+        hr=workSheetFormula.get_highest_row()
+        hc=workSheetFormula.get_highest_column()
+        grp_sheet = outfile.create_group(sheet)
+        fr="formula"
+        va="value"
+        tp="top-label"
+        lf="left-label"
+        subgrp=grp_sheet.create_group(fr)
+        subgrp1=grp_sheet.create_group(va)
+        subgrp2=grp_sheet.create_group(tp)
+        subgrp3=grp_sheet.create_group(lf)
+
+        for row in range(1, hr+1):
+            for col in range(1, hc+1): 
+                val=getValueEx2(workSheetFormula,workSheetValued,col,row,sheet)
+                if(val!=0):
+                    name=workSheetFormula.cell(column=col, row=row).coordinate
+                    if(val[0]==1):
+                        fr=data=name+":"+val[1]
+                        va=data=name+":"+val[2]
+                        tp=data=name+":"+val[3]
+                        lf=data=name+":"+val[4]
+                        dset=subgrp.create_dataset(fr, data=name+":"+val[1])
+                        dset=subgrp1.create_dataset(va, data=name+":"+val[2]) 
+                        dset=subgrp2.create_dataset(tp, data=name+":"+val[3]) 
+                        dset=subgrp3.create_dataset(lf, data=name+":"+val[4])         
+
+        
+    
+    outfile.close()
+    
+    return settings.PROJECT_ROOT+"/media/documents/data.hdf5"
 def index(request):
 
     return HttpResponse("Welcome- Under Construction")
@@ -324,7 +391,7 @@ def upload(request):
         if form.is_valid():
             newdoc = ExcelFile(docfile = request.FILES['docfile'])
             newdoc.save()
-            file=processWorkBookHdf5(newdoc.docfile.name)
+            file=processWorkBookHdf5Ex(newdoc.docfile.name)
             newdoc2 = ExcelFile(file_name="download",docfile = "/media/documents/data.hdf5")
             newdoc2.save()
     else:
