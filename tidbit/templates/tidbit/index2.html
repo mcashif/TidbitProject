@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+<head>
+	    <meta charset="utf-8" />
+	    
+	    <link rel="stylesheet" type="text/css" href="http://www.prepbootstrap.com/Content/shieldui-lite/dist/css/light/all.min.css" />
+		<script type="text/javascript" src="http://www.prepbootstrap.com/Content/shieldui-lite/dist/js/shieldui-lite-all.min.js"></script>
+
+		<script type="text/javascript" src="http://www.prepbootstrap.com/Content/data/shortGridData.js"></script>
+    
+    	<title>Tidbit Case</title>
+
+		  <meta name="viewport" content="width=device-width, initial-scale=1">
+		  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+		  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  
+</head>
+
+
+
+  
+<body class="theme-light">
+
+<div class="container">
+
+  <h2>Tidbit</h2>
+  <ul class="nav nav-pills">
+  {% csrf_token %}
+    {% for sdata in sheetList %}
+    <li><a data-toggle="pill" href="#{{ forloop.counter }}">{{sdata}}</a></li>
+   {% endfor %}
+  </ul>
+  
+  <div class="tab-content">
+  
+    {% for sdata in sheetList %}
+    
+		<div id={{ forloop.counter }} class="tab-pane fade">
+		
+		    <div id="grid{{ forloop.counter }}"></div>
+		    
+		    
+			<table id="dataTable{{ forloop.counter }}">
+			    <thead>
+			        <tr>
+			        	<th>id</th>
+			            <th>CellId</th>
+			            <th>Value</th>
+			            <th>TopLabel</th>
+			            <th>LeftLabel</th>
+			            <th>Formula</th>
+			        </tr>
+			    </thead>
+			    <tbody>
+					    
+					  {% for data in listofdData %}
+				      	{% if data.1 == sdata %}
+			    
+					            <tr>
+					            <td>{{ forloop.counter }}</td>
+					            <td>{{data.1}}</td>
+					            <td>{{data.4}}</td>
+					            <td>{{data.5}}</td>
+					            <td>N</td>
+					            <td>{{data.3}}</td>
+					        	</tr>
+
+			      		
+				      	{% endif %}
+				      {% endfor %}
+				      
+			    </tbody>
+			</table>			
+		</div>
+
+
+			
+												
+				<script type="text/javascript">
+				    $(document).ready(function () {
+				        $("#grid{{forloop.counter}}").shieldGrid({
+				            dataSource: {
+				                data: "#dataTable{{ forloop.counter }}",
+				                schema: {
+				                    fields: {
+				                        id: { path: "id", type: Number },
+				                        CellId: { path: "CellId", type: String },
+				                        Value: { path: "Value", type: String },
+				                        TopLabel: { path: "TopLabel", type: String },
+				                        LeftLabel: { path: "LeftLabel", type: String },
+				                        Formula: { path: "Formula", type: String },
+				                    }
+				                }
+				            },
+				            sorting: {
+				                multiple: true
+				            },
+				            rowHover: false,
+				            columns: [
+				                { field: "CellId", title: "CellId", width: "120px" },
+				                { field: "Value", title: "Value", width: "80px" },
+				                { field: "TopLabel", title: "TopLabel" },
+				                { field: "LeftLabel", title: "LeftLabel", "80px"},
+				                { field: "Formula", title: "Formula" },
+				                {
+				                    width: "104px",
+				                    title: "Delete Column",
+				                    buttons: [
+				                        { cls: "deleteButton", commandName: "delete", caption: "<img src='http://www.prepbootstrap.com/Content/images/template/BootstrapEditableGrid/delete.png' /><span>Delete</span>" }
+				                    ]
+				                }
+				            ],
+				            editing: {
+				                enabled: true,
+				                event: "click",
+				                type: "cell",
+				                confirmation: {
+				                    "delete": {
+				                        enabled: true,
+				                        template: function (item) {
+				                            return "Delete row with ID = " + item.id
+				                        }
+				                    }
+				                }
+				            },
+				
+				        });
+				
+				    });
+				</script>
+
+				<style type="text/css">
+				
+				          
+							#dataTable{{forloop.counter}}
+							{
+							    display: none;
+							}
+							        
+							.sui-button-cell
+							{
+							    text-align: center;
+							}
+							
+							.sui-checkbox
+							{
+							    font-size: 17px !important;
+							    padding-bottom: 4px !important;
+							}
+							
+							.deleteButton img
+							{
+							    margin-right: 3px;
+							    vertical-align: bottom;
+							}
+							
+							.bigicon
+							{
+							    color: #5CB85C;
+							    font-size: 20px;
+							}
+				
+				</style>
+							
+	{% endfor %}
+
+    
+  </div>
+</div>
+
+			
+			
+		
+
+
+</body>
+</html>

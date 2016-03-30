@@ -1,21 +1,203 @@
-<!doctype html>
-
+<!DOCTYPE html>
+{% load staticfiles %}
 <html lang="en">
 <head>
+  <title>Bootstrap Case</title>
   <meta charset="utf-8">
-
-  <title>The HTML5 Herald</title>
-  <meta name="description" content="The HTML5 Herald">
-  <meta name="author" content="SitePoint">
-
-  <link rel="stylesheet" href="css/styles.css?v=1.0">
-
-  <!--[if lt IE 9]>
-  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-  <![endif]-->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 </head>
-
 <body>
-  <script src="js/scripts.js"></script>
+
+<div class="container">
+  <h2>Dynamic Pills</h2>
+  <ul class="nav nav-pills">
+  {% csrf_token %}
+    {% for sdata in sheetList %}
+    <li><a data-toggle="pill" href="#{{ forloop.counter }}">{{sdata}}</a></li>
+   {% endfor %}
+  </ul>
+  
+  <div class="tab-content">
+  {% csrf_token %}
+		{% for sdata in sheetList %}
+		<div id={{ forloop.counter }} class="tab-pane fade">
+		      <h3>{{sdata}}</h3>
+
+			<div class="col-md-12">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="text-center">Bootstrap Editable jQuery Grid <span class="fa fa-edit pull-right bigicon"></span></h4>
+        </div>
+        <div class="panel-body text-center">
+            <div id="grid"></div>
+
+					    <table id="dataTable">
+					    <thead>
+					        <tr>
+					            <th>cellId</th>
+					            <th>topLabel</th>
+					            <th>leftLabel</th>
+					            <th>formula</th>
+					            <th>value</th>
+					        </tr>
+					    </thead>
+					    
+					    
+					    <tbody>
+					    
+					    
+					  {% for data in listofdData %}
+				      {% if data.1 == sdata %}
+			      
+			      		{% if data.0 == 0 %}
+					            <tr>
+					            <td>{{data.2}}</td>
+					            <td>{{data.4}}</td>
+					            <td>{{data.5}}</td>
+					            <td>N</td>
+					            <td>{{data.3}}</td>
+					        </tr>
+					    {% endif %}
+					    
+					    {% if data.0 == 1 %}
+					            <tr>
+					            <td>{{data.2}}</td>
+					            <td>{{data.2}}</td>
+					            <td>{{data.2}}</td>
+					            <td>{{data.2}}</td>
+					            <td>{{data.2}}</td>
+					        </tr>
+					    {% endif %}
+			      		
+				      {% endif %}
+				      {% endfor %}
+
+					    </tbody>
+					</table>
+
+        </div>
+    </div>
+</div>
+		   </div>
+    	{% endfor %}
+  </div>
+</div>
+
+
+
+
+<!-- you need to include the shieldui css and js assets in order for the grids to work -->
+<link rel="stylesheet" type="text/css" href="http://www.prepbootstrap.com/Content/shieldui-lite/dist/css/light/all.min.css" />
+<script type="text/javascript" src="http://www.prepbootstrap.com/Content/shieldui-lite/dist/js/shieldui-lite-all.min.js"></script>
+
+<script type="text/javascript" src="http://www.prepbootstrap.com/Content/data/shortGridData.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+    
+    
+    var gridData2 =
+[
+
+
+    {
+        "cellId": "test",
+        "value": "8d1e53cb-464e-47c8-8742-068b3646b388",
+        "vlaue": true,
+        "value": "$1,941.51",
+    },
+ 
+ 
+ ]
+    
+        $("#grid").shieldGrid({
+            dataSource: {
+                data: gridData2 ,
+                schema: {
+                    fields: {
+                        cellId: { path: "id", type: String },
+                        topLabel: { path: "age", type: String },
+                        applyAll: { path: "isActive", type: Boolean },
+                        leftLabel: { path: "company", type: String },
+                        applyAll: { path: "isActive", type: Boolean },
+                        formula: { path: "email", type: String },
+                        value: { path: "transport", type: Number }
+                    }
+                }
+            },
+            sorting: {
+                multiple: true
+            },
+            rowHover: false,
+            columns: [
+                { field: "cellId", title: "Cell Name", width: "120px" },
+                { field: "topLabel", title: "Top Lable", width: "80px" },
+                { field: "applyAll", title: "Apply to All" },
+                { field: "leftLabel", title: "Left Label", width: "80px" },
+                { field: "applyAll", title: "Apply to All" },
+                { field: "formula", title: "Formula", width: "250px" },
+                { field: "value", title: "Value", width: "250px" },
+                {
+                    width: "104px",
+                    title: "Delete Column",
+                    buttons: [
+                        { cls: "deleteButton", commandName: "delete", caption: "<img src='http://www.prepbootstrap.com/Content/images/template/BootstrapEditableGrid/delete.png' /><span>Delete</span>" }
+                    ]
+                }
+            ],
+            editing: {
+                enabled: true,
+                event: "click",
+                type: "cell",
+                confirmation: {
+                    "delete": {
+                        enabled: true,
+                        template: function (item) {
+                            return "Delete row with ID = " + item.id
+                        }
+                    }
+                }
+            },
+            events:
+            {
+                getCustomEditorValue: function (e) {
+                    e.value = $("#dropdown").swidget().value();
+                    $("#dropdown").swidget().destroy();
+                }
+            }
+        });
+
+    });
+</script>
+
+<style type="text/css">
+    .sui-button-cell
+    {
+        text-align: center;
+    }
+
+    .sui-checkbox
+    {
+        font-size: 17px !important;
+        padding-bottom: 4px !important;
+    }
+
+    .deleteButton img
+    {
+        margin-right: 3px;
+        vertical-align: bottom;
+    }
+
+    .bigicon
+    {
+        color: #5CB85C;
+        font-size: 20px;
+    }
+</style>
+
 </body>
 </html>
+

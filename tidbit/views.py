@@ -16,7 +16,11 @@ from django.views.static import serve
 import unicodedata
 import h5py as hdf
 from django.utils.encoding import smart_str
+from django.template import loader
 
+
+listofdData=[]
+sheetList=[]
 
 
 
@@ -248,6 +252,28 @@ def getValueEx3(sheetformula,sheetvalue,col,row,sheet):
 
     return 0
 
+def getValueEx4(sheetformula,sheetvalue,col,row,sheet):
+
+#Return if Empty
+    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
+        return 0
+
+
+    value=str(sheetvalue.cell(column=col, row=row).value)
+    formula=str(sheetformula.cell(column=col, row=row).value)
+    
+    if(isCellNumber(sheetformula.cell(column=col, row=row))):
+        val=[0,sheet,sheetformula.cell(column=col, row=row).coordinate,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)]
+        return val
+    else:
+        if(isCellFormula(sheetformula.cell(column=col, row=row))):
+            val=[1,sheet,sheetformula.cell(column=col, row=row).coordinate,formula,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)] 
+            
+            return val
+ 
+
+    return 0
+
 def processWorkBook(path):
     workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
     workSheetFormula = workBook.get_active_sheet()
@@ -339,7 +365,6 @@ def processWorkBookHdf5Ex(path):
     workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
     workBookSheets=workBook.get_sheet_names()
 
-
     outfile = hdf.File(settings.PROJECT_ROOT+"/media/documents/data.hdf5",'w')
     
     for sheet in workBookSheets:
@@ -378,9 +403,35 @@ def processWorkBookHdf5Ex(path):
     outfile.close()
     
     return settings.PROJECT_ROOT+"/media/documents/data.hdf5"
+
+
+def processWorkBookHdf5Ex2(path):
+    workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
+    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
+    workBookSheets=workBook.get_sheet_names()
+    listofdData[:] = []
+    sheetList[:] = []
+
+    for sheet in workBookSheets:
+    
+        workSheetFormula = workBook.get_sheet_by_name(sheet)
+        workSheetValued = workBookValued.get_sheet_by_name(sheet)
+        hr=workSheetFormula.get_highest_row()
+        hc=workSheetFormula.get_highest_column()
+        sheetList.append(sheet)
+        
+        for row in range(1, hr+1):
+            for col in range(1, hc+1): 
+                val=getValueEx4(workSheetFormula,workSheetValued,col,row,sheet)
+                if(val!=0):
+                    listofdData.append(val)        
+
+    
+    return settings.PROJECT_ROOT+"/media/documents/data.hdf5"
+
 def index(request):
 
-    return HttpResponse("Welcome- Under Construction")
+    return render(request, 'tidbit/index.html')
 
 
 def upload(request):
@@ -391,9 +442,18 @@ def upload(request):
         if form.is_valid():
             newdoc = ExcelFile(docfile = request.FILES['docfile'])
             newdoc.save()
-            file=processWorkBookHdf5Ex(newdoc.docfile.name)
+            file=processWorkBookHdf5Ex2(newdoc.docfile.name)
             newdoc2 = ExcelFile(file_name="download",docfile = "/media/documents/data.hdf5")
             newdoc2.save()
+            
+            template = loader.get_template('tidbit/index4.html')
+            context = {
+                       
+                'listofdData': listofdData,
+                'sheetList': sheetList,
+            }
+            
+            return HttpResponse(template.render(context, request))
     else:
         form = DocumentForm() # A empty, unbound form
 
