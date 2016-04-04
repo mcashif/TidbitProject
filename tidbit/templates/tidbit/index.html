@@ -1,203 +1,356 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 {% load staticfiles %}
-<html lang="en">
+<html>
 <head>
-  <title>Bootstrap Case</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+  <title>Tidbit: Edit UI</title>
+
+  <link rel="stylesheet" href="{% static 'slickg/slick.grid.css' %}" type="text/css"/>
+  <link rel="stylesheet" href="{% static 'slickg/controls/slick.pager.css' %}" type="text/css"/>
+  <link rel="stylesheet" href="{% static 'slickg/css/smoothness/jquery-ui-1.8.16.custom.css' %}" type="text/css"/>
+  <link rel="stylesheet" href="{% static 'slickg/controls/slick.columnpicker.css' %}" type="text/css"/>
+  <link rel="stylesheet" href="{% static 'slickg/examples/examples.css' %}" type="text/css"/>
+
+  <style>
+    .slick-cell-checkboxsel {
+      background: #f0f0f0;
+      border-right-color: silver;
+      border-right-style: solid;
+    }
+    .slick-headerrow-column {
+      background: #87ceeb;
+      text-overflow: clip;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+    .slick-headerrow-column input {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+    .cell-effort-driven {
+      text-align: center;
+    }
+
+    .slick-group-title[level='0'] {
+      font-weight: bold;
+    }
+
+    .slick-group-title[level='1'] {
+      text-decoration: underline;
+    }
+
+    .slick-group-title[level='2'] {
+      font-style: italic;
+    }
+  </style>
+
 </head>
 <body>
 
-<div class="container">
-  <h2>Dynamic Pills</h2>
-  <ul class="nav nav-pills">
-  {% csrf_token %}
-    {% for sdata in sheetList %}
-    <li><a data-toggle="pill" href="#{{ forloop.counter }}">{{sdata}}</a></li>
-   {% endfor %}
-  </ul>
-  
-  <div class="tab-content">
-  {% csrf_token %}
-		{% for sdata in sheetList %}
-		<div id={{ forloop.counter }} class="tab-pane fade">
-		      <h3>{{sdata}}</h3>
+  <table width="100%">
+    <tr>
+      <td valign="top" width="50%">
+        <div id="myGrid" style="width:700px;height:500px;"></div>
+      </td>
+      <td valign="top">
+        <h2>Data Options</h2>
+        <ul>
+          <li>Please select cell option from list</li>
+        </ul>
+        <button onclick="dataView.collapseAllGroups()">Collapse all groups</button>
+        <br/>
+        <button onclick="dataView.expandAllGroups()">Expand all groups</button>
+        <br/>
+        <button onclick="deleteRows()">Delete Selected Data</button>
+        <br/>
+        <button onclick="undo()"><img src="{% static 'slickg/images/arrow_undo.png' %}" align="absmiddle"> Undo</button>
+        <br/>
+        <input id="find" name="find" type="text" value="find..."/>
+        <input id="replace" name="replace" type="text" value="replace..."/>
+        <button onclick="findReplace()">Find Replace Data</button>
 
-			<div class="col-md-12">
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h4 class="text-center">Bootstrap Editable jQuery Grid <span class="fa fa-edit pull-right bigicon"></span></h4>
-        </div>
-        <div class="panel-body text-center">
-            <div id="grid"></div>
-
-					    <table id="dataTable">
-					    <thead>
-					        <tr>
-					            <th>cellId</th>
-					            <th>topLabel</th>
-					            <th>leftLabel</th>
-					            <th>formula</th>
-					            <th>value</th>
-					        </tr>
-					    </thead>
-					    
-					    
-					    <tbody>
-					    
-					    
-					  {% for data in listofdData %}
-				      {% if data.1 == sdata %}
-			      
-			      		{% if data.0 == 0 %}
-					            <tr>
-					            <td>{{data.2}}</td>
-					            <td>{{data.4}}</td>
-					            <td>{{data.5}}</td>
-					            <td>N</td>
-					            <td>{{data.3}}</td>
-					        </tr>
-					    {% endif %}
-					    
-					    {% if data.0 == 1 %}
-					            <tr>
-					            <td>{{data.2}}</td>
-					            <td>{{data.2}}</td>
-					            <td>{{data.2}}</td>
-					            <td>{{data.2}}</td>
-					            <td>{{data.2}}</td>
-					        </tr>
-					    {% endif %}
-			      		
-				      {% endif %}
-				      {% endfor %}
-
-					    </tbody>
-					</table>
-
-        </div>
-    </div>
-</div>
-		   </div>
-    	{% endfor %}
-  </div>
-</div>
+      </td>
+      <td valign="top">
+        <h2>File Options</h2>
+        <ul>
+          <li>Please select file and press process to load data</li>
+        </ul>
+        <!-- Upload form. Note enctype attribute! -->
+          <form action="{% url "upload" %}" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <p>{{ form.non_field_errors }}</p>
+                  <p>{{ form.docfile.label_tag }} </p>
+                  <p>
+                          {{ form.docfile.errors }}
+                          {{ form.docfile }}
+                  </p>
+                  <p><input type="submit" value="Process" /></p>
+          </form>
+        <ul>
+          <li>Convert loaded data to hdf5 file-Download Link Will Apear</li>
+        </ul>
+        <br/>
+        <button onclick="getDataFile()">Generate Data File</button>
+        <br/>
+        <li><a href="/media/documents/data.hdf5" style="display: none;" id="download">Download Link</a></li>
+      </td>
+    </tr>
+  </table>
 
 
 
 
-<!-- you need to include the shieldui css and js assets in order for the grids to work -->
-<link rel="stylesheet" type="text/css" href="http://www.prepbootstrap.com/Content/shieldui-lite/dist/css/light/all.min.css" />
-<script type="text/javascript" src="http://www.prepbootstrap.com/Content/shieldui-lite/dist/js/shieldui-lite-all.min.js"></script>
 
-<script type="text/javascript" src="http://www.prepbootstrap.com/Content/data/shortGridData.js"></script>
+<script src="{% static 'slickg/lib/firebugx.js' %}"></script>
+<script src="{% static 'slickg/lib/jquery-1.7.min.js' %}"></script>
+<script src="{% static 'slickg/lib/jquery-ui-1.8.16.custom.min.js' %}"></script>
+<script src="{% static 'slickg/lib/jquery.event.drag-2.2.js' %}"></script>
+<script src="{% static 'slickg/slick.core.js' %}"></script>
+<script src="{% static 'slickg/slick.formatters.js' %}"></script>
+<script src="{% static 'slickg/slick.editors.js' %}"></script>
+<script src="{% static 'slickg/plugins/slick.cellrangedecorator.js' %}"></script>
+<script src="{% static 'slickg/plugins/slick.cellrangeselector.js' %}"></script>
+<script src="{% static 'slickg/plugins/slick.cellselectionmodel.js' %}"></script>
+<script src="{% static 'slickg/slick.grid.js' %}"></script>
+<script src="{% static 'slickg/slick.groupitemmetadataprovider.js' %}"></script>
+<script src="{% static 'slickg/slick.dataview.js' %}"></script>
+<script src="{% static 'slickg/controls/slick.pager.js' %}"></script>
+<script src="{% static 'slickg/controls/slick.columnpicker.js' %}"></script>
+<script src="{% static 'slickg/slick.editors.js' %}"></script>
+<script src="{% static 'slickg/plugins/slick.rowmovemanager.js' %}"></script>
+<script src="{% static 'slickg/plugins/slick.rowselectionmodel.js' %}"></script>
+<script src="{% static 'slickg/plugins/slick.checkboxselectcolumn.js' %}"></script>
 
-<script type="text/javascript">
-    $(document).ready(function () {
-    
-    
-    var gridData2 =
-[
+<script>
+  var dataView;
+  var grid;
+  var data = [];
+  var options = {
+    enableCellNavigation: true,
+    showHeaderRow: true,
+    headerRowHeight: 30,
+    explicitInitialization: true,
+    enableCellNavigation: true,
+    editable: true,
+    editCommandHandler: queueAndExecuteCommand
+  };
+
+  var columnFilters = {};
+
+  var checkboxSelector = new Slick.CheckboxSelectColumn({
+  cssClass: "slick-cell-checkboxsel"
+  });
+
+  var columns = [];
+
+    columns.push(checkboxSelector.getColumnDefinition());
+    columns.push({id: "sel", name: "#", field: "num", cssClass: "cell-selection", width: 40, resizable: false, selectable: false, focusable: false });
+    columns.push({id: "sh", name: "Sheet", field: "sheet", width: 100, minWidth: 50, cssClass: "cell-title", sortable: true, editor: Slick.Editors.Text});
+    columns.push({id: "is", name: "Cell ID", field: "cid", width: 60, minWidth: 50, cssClass: "cell-title", sortable: true, editor: Slick.Editors.Text});
+    columns.push({id: "tlab", name: "Top Label", field: "topLabel", width: 80, sortable: true, editor: Slick.Editors.Text});
+    columns.push({id: "llab", name: "Left Label", field: "leftLabel", width: 80, sortable: true, editor: Slick.Editors.Text});
+    columns.push({id: "frm", name: "Formula", field: "formula", width: 160, editor: Slick.Editors.LongText});
+    columns.push({id: "val", name: "Value", field: "value", minWidth: 150, sortable: true, editor: Slick.Editors.Text});
 
 
-    {
-        "cellId": "test",
-        "value": "8d1e53cb-464e-47c8-8742-068b3646b388",
-        "vlaue": true,
-        "value": "$1,941.51",
-    },
- 
- 
- ]
-    
-        $("#grid").shieldGrid({
-            dataSource: {
-                data: gridData2 ,
-                schema: {
-                    fields: {
-                        cellId: { path: "id", type: String },
-                        topLabel: { path: "age", type: String },
-                        applyAll: { path: "isActive", type: Boolean },
-                        leftLabel: { path: "company", type: String },
-                        applyAll: { path: "isActive", type: Boolean },
-                        formula: { path: "email", type: String },
-                        value: { path: "transport", type: Number }
-                    }
-                }
-            },
-            sorting: {
-                multiple: true
-            },
-            rowHover: false,
-            columns: [
-                { field: "cellId", title: "Cell Name", width: "120px" },
-                { field: "topLabel", title: "Top Lable", width: "80px" },
-                { field: "applyAll", title: "Apply to All" },
-                { field: "leftLabel", title: "Left Label", width: "80px" },
-                { field: "applyAll", title: "Apply to All" },
-                { field: "formula", title: "Formula", width: "250px" },
-                { field: "value", title: "Value", width: "250px" },
-                {
-                    width: "104px",
-                    title: "Delete Column",
-                    buttons: [
-                        { cls: "deleteButton", commandName: "delete", caption: "<img src='http://www.prepbootstrap.com/Content/images/template/BootstrapEditableGrid/delete.png' /><span>Delete</span>" }
-                    ]
-                }
-            ],
-            editing: {
-                enabled: true,
-                event: "click",
-                type: "cell",
-                confirmation: {
-                    "delete": {
-                        enabled: true,
-                        template: function (item) {
-                            return "Delete row with ID = " + item.id
-                        }
-                    }
-                }
-            },
-            events:
-            {
-                getCustomEditorValue: function (e) {
-                    e.value = $("#dropdown").swidget().value();
-                    $("#dropdown").swidget().destroy();
-                }
-            }
+
+   //undo start  var commandQueue = [];
+   var commandQueue = [];
+   function queueAndExecuteCommand(item, column, editCommand) {
+     commandQueue.push(editCommand);
+     editCommand.execute();
+   }
+   function undo() {
+     var command = commandQueue.pop();
+     if (command && Slick.GlobalEditorLock.cancelCurrentEdit()) {
+       command.undo();
+       grid.gotoCell(command.row, command.cell, false);
+     }
+   }
+  //undo end
+
+
+  function filter(item) {
+    for (var columnId in columnFilters) {
+      if (columnId !== undefined && columnFilters[columnId] !== "") {
+        var c = grid.getColumns()[grid.getColumnIndex(columnId)];
+        if (item[c.field] != columnFilters[columnId]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+
+function groupBySheet() {
+    dataView.setGrouping({
+      getter: "sheet",
+      formatter: function (g) {
+        return g.value + "  <span style='color:green'>(" + g.count + " items)</span>";
+      }
+    });
+  }
+
+
+  function deleteRows() {
+      var selectedIndexes = grid.getSelectedRows().sort().reverse();
+      var result = confirm("Are you sure you want to delete " + grid.getSelectedRows().length + " row(s)?");
+      if (result) {
+
+        $.each(selectedIndexes, function (index, value) {
+          var item = dataView.getItem(value); //RowNum is the number of the row
+          if (item)
+            dataView.deleteItem(item.id); //RowID is the actual ID of the row and not the row number
         });
 
+        grid.invalidate();
+        grid.render();
+        grid.setSelectedRows([]);
+      }
+    }
+
+  function getDataFile() {
+
+            var localJSONData = JSON.stringify(data);
+
+             $.ajax({
+                    type: "POST",
+                    url: "/tidbit/process/",
+                    dataType: "json",
+                    data: {'data': localJSONData},
+                    cache: false,
+                    success: function(data){
+                        $('#download').show();
+                    },   // Success Function
+                    error: function() {
+                      alert("Error POST JSON DATA");
+                    }
+    }); // AJAX Call
+
+  }
+  function findReplace() {
+
+        var find = document.getElementById("find").value;
+        var replace = document.getElementById("replace").value;
+
+        for(i = 0; i<data.length; i++)
+        {
+
+          if(data[i].sheet==find)
+              data[i].sheet=replace;
+
+          if(data[i].cid==find)
+              data[i].cid=replace;
+
+          if(data[i].topLabel==find)
+              data[i].topLabel=replace;
+
+          if(data[i].leftLabel==find)
+              data[i].leftLabel=replace;
+
+          if(data[i].formula==find)
+              data[i].formula=replace;
+
+          if(data[i].value==find)
+              data[i].value=replace;
+
+
+        }
+
+          grid.invalidate();
+      }
+
+  function loadData() {
+
+    data = [];
+    var i = 0;
+
+    {% for sdata in listofdData %}
+
+      {% if sdata.0 == 0 %}
+      data.push({
+        id:  "id_" + i++,
+        num:  i++,
+        sheet:  "{{sdata.1}}",
+        cid: "{{sdata.2}}",
+        topLabel: "{{sdata.4}}",
+        leftLabel: "{{sdata.5}}",
+        formula: "No Formula",
+        value:  "{{sdata.3}}"
+      });
+      {% endif %}
+
+      {% if sdata.0 == 1 %}
+      data.push({
+        id:  "id_" + i++,
+        num:  i++,
+        sheet:  "{{sdata.1}}",
+        cid: "{{sdata.2}}",
+        topLabel: "{{sdata.5}}",
+        leftLabel: "{{sdata.6}}",
+        formula: "{{sdata.3}}",
+        value:  "{{sdata.4}}"
+      });
+      {% endif %}
+
+    {% endfor %}
+
+    dataView.setItems(data);
+  }
+
+
+  $(function () {
+
+    var groupItemMetadataProvider = new Slick.Data.GroupItemMetadataProvider();
+    dataView = new Slick.Data.DataView({
+      groupItemMetadataProvider: groupItemMetadataProvider,
+      inlineFilters: true
     });
+
+    grid = new Slick.Grid("#myGrid", dataView, columns, options);
+
+    // register the group item metadata provider to add expand/collapse group handlers
+    grid.registerPlugin(groupItemMetadataProvider);
+
+    grid.setSelectionModel(new Slick.RowSelectionModel({selectActiveRow: false}));
+    grid.registerPlugin(checkboxSelector);
+
+
+    dataView.onRowCountChanged.subscribe(function (e, args) {
+      grid.updateRowCount();
+      grid.render();
+    });
+    dataView.onRowsChanged.subscribe(function (e, args) {
+      grid.invalidateRows(args.rows);
+      grid.render();
+    });
+    $(grid.getHeaderRow()).delegate(":input", "change keyup", function (e) {
+      var columnId = $(this).data("columnId");
+      if (columnId != null) {
+        columnFilters[columnId] = $.trim($(this).val());
+        dataView.refresh();
+      }
+    });
+    grid.onHeaderRowCellRendered.subscribe(function(e, args) {
+        $(args.node).empty();
+        $("<input type='text'>")
+           .data("columnId", args.column.id)
+           .val(columnFilters[args.column.id])
+           .appendTo(args.node);
+    });
+    grid.init();
+    dataView.beginUpdate();
+    loadData();
+    groupBySheet();
+    dataView.setFilter(filter);
+    dataView.endUpdate();
+  })
 </script>
-
-<style type="text/css">
-    .sui-button-cell
-    {
-        text-align: center;
-    }
-
-    .sui-checkbox
-    {
-        font-size: 17px !important;
-        padding-bottom: 4px !important;
-    }
-
-    .deleteButton img
-    {
-        margin-right: 3px;
-        vertical-align: bottom;
-    }
-
-    .bigicon
-    {
-        color: #5CB85C;
-        font-size: 20px;
-    }
-</style>
-
 </body>
 </html>
-

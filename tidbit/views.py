@@ -532,7 +532,7 @@ def upload(request):
             newdoc = ExcelFile(docfile = request.FILES['docfile'])
             newdoc.save()
             processWorkBookHdf5Ex2(newdoc.docfile.name)
-            template = loader.get_template('tidbit/index6.html')
+            template = loader.get_template('tidbit/index2.html')
             context = {
 
                 'listofdData': listofdData,
@@ -546,7 +546,7 @@ def upload(request):
 
     # Render list page with the documents and the form
     return render_to_response(
-        'tidbit/index6.html',
+        'tidbit/index2.html',
         {'form': form},
         context_instance=RequestContext(request)
     )
