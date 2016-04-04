@@ -18,35 +18,34 @@
 
   <style>
   
-		.styled-button-1 {
-			-webkit-box-shadow:rgba(0,0,0,0.2) 0 1px 0 0;
-			-moz-box-shadow:rgba(0,0,0,0.2) 0 1px 0 0;
-			box-shadow:rgba(0,0,0,0.2) 0 1px 0 0;
-			color:#333;
-			background-color:#FA2;
-			border-radius:5px;
-			-moz-border-radius:5px;
-			-webkit-border-radius:5px;
-			border:none;
-			font-family:'Helvetica Neue',Arial,sans-serif;
-			font-size:16px;
-			font-weight:700;
-			height:36px;
-			padding:4px 16px;
-			text-shadow:#FE6 0 1px 0
-		}
-		
-		.button-1:hover, 
-		.button-1:focus {
+		.button {
+		 	position: relative;
+		    background-color: #fc6; /* Green */
+		    border: none;
+		    color: white;
+		    padding: 6px 3px;
+		    text-align: center;
 		    text-decoration: none;
-		    color: #fff;
+		    display: inline-block;
+		    font-size: 14px;
+		    margin: 4px 2px;
+		    -webkit-transition-duration: 0.4s; /* Safari */
+		    transition-duration: 0.4s;
+		    cursor: pointer;
 		}
 		
-		.button-1:active {
-		    transform: translate(0px,5px);
-		    -webkit-transform: translate(0px,5px);
-		    border-bottom: 1px solid;
+		.button1 {
+		width: 150px;
+		    background-color: #fc6; 
+		    color: black; 
+		    border: 2px solid #900;
 		}
+		
+		.button1:hover {
+		    background-color: #900;
+		    color: white;
+		}
+
 
 	    .slick-cell-checkboxsel {
 	      background: #f0f0f0;
@@ -106,7 +105,7 @@
                           {{ form.docfile.errors }}
                           {{ form.docfile }}
                   </p>
-                  <p><input class="styled-button-1" type="submit" value="Load Data" /></p>
+                  <p><input class="button button1" type="submit" value="Load Data" /></p>
           </form>
 				</ul>
 			</div>
@@ -115,22 +114,22 @@
 			<h2 class="title">Data Operations</h2>
 			<div class="content">
 				<ul>
-					<button class="styled-button-1" onclick="dataView.collapseAllGroups()">Collapse all</button>
+					<button class="button button1" onclick="dataView.collapseAllGroups()">Collapse all</button>
 			        <br/>
 			         <br/>
-			        <button class="styled-button-1" onclick="dataView.expandAllGroups()">Expand all</button>
+			        <button class="button button1" onclick="dataView.expandAllGroups()">Expand all</button>
 			        <br/>
 			        <br/>
-			        <button class="styled-button-1" onclick="deleteRows()">Delete Selected</button>
+			        <button class="button button1" onclick="deleteRows()">Delete Selected</button>
 			        <br/>
 			        <br/>
-			        <button class="styled-button-1" onclick="undo()">Undo</button>
+			        <button class="button button1" onclick="undo()">Undo</button>
 			        <br/>
 			        <br/>
 			        <input id="find" name="find" type="text" value="find..."/>
 			        <input id="replace" name="replace" type="text" value="replace..."/>
 			        <br/>
-			        <button class="styled-button-1" onclick="findReplace()">Find Replace</button>
+			        <button class="button button1" onclick="findReplace()">Find Replace</button>
 				</ul>
 			</div>
 		</div>
@@ -139,7 +138,7 @@
 		<h2 class="title">File Download</h2>
 		<div class="content">
 			<ul>
-		        <button class="styled-button-1" onclick="getDataFile()">Download</button>
+		        <button class="button button1" onclick="getDataFile()">Download</button>
 		        <br/>
 		        <a href="/media/documents/data.hdf5" style="display: none;" id="download">Download Link</a>
 		        <br/>
