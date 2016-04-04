@@ -4,5 +4,5 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
-    url(r'^process/$', views.upload, name='upload'),
+    url(r'^process/$', views.makeHdfFile, name='makeHdfFile'),
 ]
