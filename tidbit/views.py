@@ -1,18 +1,10 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+
 from .forms import DocumentForm
 from .models import ExcelFile
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
-import os
 from django.conf import settings
-from django.conf.urls.static import static
 import openpyxl
-from openpyxl import load_workbook
-from openpyxl.utils import (_get_column_letter)
-from django.views.static import serve
 import unicodedata
 import h5py as hdf
 from django.utils.encoding import smart_str
@@ -20,15 +12,60 @@ from django.template import loader
 from django.http import Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-import mimetypes
-from django.http import StreamingHttpResponse
+import os
+import stat
+import shutil
 
 
+#Global Data
 listofdData=[]
 sheetList=[]
 
 
+#Helper Function Remove Directory
+def _remove_readonly(fn, path_, excinfo):
+    # Handle read-only files and directories
+    if fn is os.rmdir:
+        os.chmod(path_, stat.S_IWRITE)
+        os.rmdir(path_)
+    elif fn is os.remove:
+        os.lchmod(path_, stat.S_IWRITE)
+        os.remove(path_)
 
+
+def force_remove_file_or_symlink(path_):
+    try:
+        os.remove(path_)
+    except OSError:
+        os.lchmod(path_, stat.S_IWRITE)
+        os.remove(path_)
+
+
+# Code from shutil.rmtree()
+def is_regular_dir(path_):
+    try:
+        mode = os.lstat(path_).st_mode
+    except os.error:
+        mode = 0
+    return stat.S_ISDIR(mode)
+
+
+def clear_dir(path_):
+    if is_regular_dir(path_):
+        # Given path is a directory, clear its content
+        for name in os.listdir(path_):
+            fullpath = os.path.join(path_, name)
+            if is_regular_dir(fullpath):
+                shutil.rmtree(fullpath, onerror=_remove_readonly)
+            else:
+                force_remove_file_or_symlink(fullpath)
+    else:
+        # Given path is a file or a symlink.
+        # Raise an exception here to avoid accidentally clearing the content
+        # of a symbolic linked directory.
+        raise OSError("Cannot call clear_dir() on a symbolic link")
+    
+#Helper Functions Excel Data
 def isCellEmpty(cell):
 
     if cell.value is None:
@@ -118,6 +155,8 @@ def findTopVaiable(sheet, cell, col, row):
                 return value
 
     return "No Top Heading"
+
+
 def findLeftVaiable(sheet, cell, col, row):
 
     for col in range(col,0,-1):
@@ -133,14 +172,14 @@ def findLeftVaiable(sheet, cell, col, row):
 
 def cellNumberUsedInSheet(sheet,cell,colv,rowv):
 
-     for row in sheet.rows:
+    for row in sheet.rows:
         for cellRow in row:
             cellValue=str(cellRow.value)
             cellCordinate=str(cell.coordinate)
             if ( cellValue.find(cellCordinate)>-1 & cellValue.find("!")==-1):
                 return "("+str(cell.value)+")"+"(Intermediate Cell)" + "(Used at:"+cellRow.coordinate+")"+"("+findTopVaiable(sheet,cell,colv,rowv)+")"+"("+findLeftVaiable(sheet,cell,colv,rowv)+")"
 
-     return "("+str(cell.value)+")"+"(Output)" +"("+findTopVaiable(sheet,cell,colv,rowv)+")"+"("+findLeftVaiable(sheet,cell,colv,rowv)+")"
+    return "("+str(cell.value)+")"+"(Output)" +"("+findTopVaiable(sheet,cell,colv,rowv)+")"+"("+findLeftVaiable(sheet,cell,colv,rowv)+")"
 
 def cellUsedInSheet(sheet,cell,formulaOutput,colv,rowv):
 
@@ -165,99 +204,10 @@ def getFormulaType(sheet,cell,col,row,formulaOutput):
 
     return cellUsedInSheet(sheet,cell,formulaOutput,col,row)
 
+# End Helper Function
 
-
-def getValue(sheetformula,sheetvalue,col,row):
-
-#Return if Empty
-    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
-        return sheetformula.cell(column=col, row=row).value
-
-
-    if(isCellNumber(sheetformula.cell(column=col, row=row))):
-        return cellNumberUsedInSheet(sheetformula,sheetformula.cell(column=col, row=row),col,row)
-    else:
-        if(isCellFormula(sheetformula.cell(column=col, row=row))):
-            return getFormulaType(sheetformula,sheetformula.cell(column=col, row=row),col,row,str(sheetvalue.cell(column=col, row=row).value))
-        else:
-            if(isCellConnected(sheetformula,col,row)==False):
-                    return str(sheetformula.cell(column=col, row=row).value)+"(label)"
-
-    return str(sheetformula.cell(column=col, row=row).value)+"(variable)"
-
-
-def getValueEx(sheetformula,sheetvalue,col,row,sheet):
-
-#Return if Empty
-    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
-        return 0
-
-
-    value=str(sheetvalue.cell(column=col, row=row).value)
-    formula=str(sheetformula.cell(column=col, row=row).value)
-
-    if(isCellNumber(sheetformula.cell(column=col, row=row))):
-        val="\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Value"+"\""+","+"\""+value+"\""+","+"\n" \
-            +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Top-Label"+"\""+","+"\""+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" \
-            +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Left-Label"+"\""+","+"\""+findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n"
-        return val
-    else:
-        if(isCellFormula(sheetformula.cell(column=col, row=row))):
-            val="\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Formula"+"\""+","+"\""+formula+"\""+","+"\n" \
-                +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Value"+"\""+","+"\""+value+"\""+","+"\n" \
-                +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Top-Label"+"\""+","+"\""+findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n" \
-                +"\""+sheet+"\""+","+"\""+sheetformula.cell(column=col, row=row).coordinate+"\""+"," +"\""+"Left-Label"+"\""+","+"\""+findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)+"\""+","+"\n"
-
-            return val
-
-
-    return 0
-
-def getValueEx2(sheetformula,sheetvalue,col,row,sheet):
-
-#Return if Empty
-    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
-        return 0
-
-
-    value=str(sheetvalue.cell(column=col, row=row).value)
-    formula=str(sheetformula.cell(column=col, row=row).value)
-
-    if(isCellNumber(sheetformula.cell(column=col, row=row))):
-        val=[0,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)]
-        return val
-    else:
-        if(isCellFormula(sheetformula.cell(column=col, row=row))):
-            val=[1,formula,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)]
-
-            return val
-
-
-    return 0
-
-def getValueEx3(sheetformula,sheetvalue,col,row,sheet):
-
-#Return if Empty
-    if(isCellEmpty(sheetformula.cell(column=col, row=row))):
-        return 0
-
-
-    value=str(sheetvalue.cell(column=col, row=row).value)
-    formula=str(sheetformula.cell(column=col, row=row).value)
-
-    if(isCellNumber(sheetformula.cell(column=col, row=row))):
-        val=[0,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)]
-        return val
-    else:
-        if(isCellFormula(sheetformula.cell(column=col, row=row))):
-            val=[1,formula,value,findTopVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row),findLeftVaiable(sheetvalue,sheetvalue.cell(column=col, row=row),col,row)]
-
-            return val
-
-
-    return 0
-
-def getValueEx4(sheetformula,sheetvalue,col,row,sheet):
+#Process Each Sheet and Get Data
+def extractDataFromSheet(sheetformula,sheetvalue,col,row,sheet):
 
 #Return if Empty
     if(isCellEmpty(sheetformula.cell(column=col, row=row))):
@@ -279,144 +229,20 @@ def getValueEx4(sheetformula,sheetvalue,col,row,sheet):
 
     return 0
 
+#Process Workbook
 def processWorkBook(path):
+    
+    #workbook loaded but it display formulas instead of values of formulas so we need two loaded object one with formula and one with value, both work side by side
     workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
-    workSheetFormula = workBook.get_active_sheet()
-
+    #value object
     workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
-    workSheetValued = workBookValued.get_active_sheet()
-
-    processedBook = openpyxl.Workbook()
-    processedSheet = processedBook.get_sheet_by_name('Sheet')
-
-    hr=workSheetFormula.get_highest_row()
-    hc=workSheetFormula.get_highest_column()
-
-    for row in range(1, hr+1):
-        for col in range(1, hc+1):
-            _ = processedSheet.cell(column=col, row=row, value=getValue(workSheetFormula,workSheetValued,col,row))
-
-
-    processedBook.save(settings.PROJECT_ROOT+"/media/documents/pathoutput.xlsx")
-
-    return settings.PROJECT_ROOT+"/media/documents/pathoutput.xlsx"
-
-def processWorkBookAll(path):
-    workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
-    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
+    
     workBookSheets=workBook.get_sheet_names()
-
-    file = open(settings.PROJECT_ROOT+"/media/documents/newfile.txt", "w")
-
-    for sheet in workBookSheets:
-
-        workSheetFormula = workBook.get_sheet_by_name(sheet)
-        workSheetValued = workBookValued.get_sheet_by_name(sheet)
-        hr=workSheetFormula.get_highest_row()
-        hc=workSheetFormula.get_highest_column()
-
-        for row in range(1, hr+1):
-            for col in range(1, hc+1):
-                val=getValueEx(workSheetFormula,workSheetValued,col,row,sheet)
-                if(val!=0):
-                    _ = file.write(str(val)+"\n")
-
-
-    file.close()
-
-    return settings.PROJECT_ROOT+"/media/documents/newfile.txt"
-
-
-def processWorkBookHdf5(path):
-    workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
-    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
-    workBookSheets=workBook.get_sheet_names()
-
-
-    outfile = hdf.File(settings.PROJECT_ROOT+"/media/documents/data.hdf5",'w')
-
-    for sheet in workBookSheets:
-
-        workSheetFormula = workBook.get_sheet_by_name(sheet)
-        workSheetValued = workBookValued.get_sheet_by_name(sheet)
-        hr=workSheetFormula.get_highest_row()
-        hc=workSheetFormula.get_highest_column()
-        grp_sheet = outfile.create_group(sheet)
-
-        for row in range(1, hr+1):
-            for col in range(1, hc+1):
-                val=getValueEx2(workSheetFormula,workSheetValued,col,row,sheet)
-                if(val!=0):
-                    name=workSheetFormula.cell(column=col, row=row).coordinate
-                    fr=name+"/formula"
-                    va=name+"/value"
-                    tp=name+"/top-label"
-                    lf=name+"/left-label"
-                    if(val[0]==1):
-                        dset=grp_sheet.create_dataset(fr, data=val[1])
-                        dset2=grp_sheet.create_dataset(va, data=val[2])
-                        dset3=grp_sheet.create_dataset(tp, data=val[3])
-                        dset4=grp_sheet.create_dataset(lf, data=val[4])
-
-
-
-    outfile.close()
-
-    return settings.PROJECT_ROOT+"/media/documents/data.hdf5"
-
-
-def processWorkBookHdf5Ex(path):
-    workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
-    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
-    workBookSheets=workBook.get_sheet_names()
-
-    outfile = hdf.File(settings.PROJECT_ROOT+"/media/documents/data.hdf5",'w')
-
-    for sheet in workBookSheets:
-
-        workSheetFormula = workBook.get_sheet_by_name(sheet)
-        workSheetValued = workBookValued.get_sheet_by_name(sheet)
-        hr=workSheetFormula.get_highest_row()
-        hc=workSheetFormula.get_highest_column()
-        grp_sheet = outfile.create_group(sheet)
-        fr="formula"
-        va="value"
-        tp="top-label"
-        lf="left-label"
-        subgrp=grp_sheet.create_group(fr)
-        subgrp1=grp_sheet.create_group(va)
-        subgrp2=grp_sheet.create_group(tp)
-        subgrp3=grp_sheet.create_group(lf)
-
-        for row in range(1, hr+1):
-            for col in range(1, hc+1):
-                val=getValueEx2(workSheetFormula,workSheetValued,col,row,sheet)
-                if(val!=0):
-                    name=workSheetFormula.cell(column=col, row=row).coordinate
-                    if(val[0]==1):
-                        fr=data=name+":"+val[1]
-                        va=data=name+":"+val[2]
-                        tp=data=name+":"+val[3]
-                        lf=data=name+":"+val[4]
-                        dset=subgrp.create_dataset(fr, data=name+":"+val[1])
-                        dset=subgrp1.create_dataset(va, data=name+":"+val[2])
-                        dset=subgrp2.create_dataset(tp, data=name+":"+val[3])
-                        dset=subgrp3.create_dataset(lf, data=name+":"+val[4])
-
-
-
-    outfile.close()
-
-    return settings.PROJECT_ROOT+"/media/documents/data.hdf5"
-
-
-def processWorkBookHdf5Ex2(path):
-    workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
-    workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
-    workBookSheets=workBook.get_sheet_names()
+    
     listofdData[:] = []
     sheetList[:] = []
 
+    #for each sheet we process
     for sheet in workBookSheets:
 
         workSheetFormula = workBook.get_sheet_by_name(sheet)
@@ -427,17 +253,15 @@ def processWorkBookHdf5Ex2(path):
 
         for row in range(1, hr+1):
             for col in range(1, hc+1):
-                val=getValueEx4(workSheetFormula,workSheetValued,col,row,sheet)
+                val=extractDataFromSheet(workSheetFormula,workSheetValued,col,row,sheet)
                 if(val!=0):
                     listofdData.append(val)
 
 
     return settings.PROJECT_ROOT+"/media/documents/data.hdf5"
 
-def index(request):
 
-    return render(request, 'tidbit/index.html')
-
+#ajax call to send Edittied data and make hdf5 file
 @csrf_exempt
 def makeHdfFile(request):
 
@@ -523,16 +347,24 @@ def makeHdfFile(request):
 
 
 
-def upload(request):
+#Start Point
+def index(request):
 
     # Handle file upload
     if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES)
         if form.is_valid():
+            
+            #CLear All Old Data in Database and directory
+            ExcelFile.objects.all().delete()
+            clear_dir(settings.PROJECT_ROOT+"/media/documents/")
+            #////////////////////////////////////////////////////
+            #Read Excel and load into Database for processing, direct uploading can be done to directory but with database we can have record if needed
             newdoc = ExcelFile(docfile = request.FILES['docfile'])
             newdoc.save()
-            processWorkBookHdf5Ex2(newdoc.docfile.name)
-            template = loader.get_template('tidbit/index2.html')
+            #entry point to processing of file
+            processWorkBook(newdoc.docfile.name)
+            template = loader.get_template('tidbit/index.html')
             context = {
 
                 'listofdData': listofdData,
@@ -544,9 +376,9 @@ def upload(request):
         form = DocumentForm() # A empty, unbound form
 
 
-    # Render list page with the documents and the form
+    # Render GUI
     return render_to_response(
-        'tidbit/index2.html',
+        'tidbit/index.html',
         {'form': form},
         context_instance=RequestContext(request)
     )

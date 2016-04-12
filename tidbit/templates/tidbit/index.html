@@ -2,86 +2,106 @@
 {% load staticfiles %}
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+ 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
-  <title>Tidbit: Edit UI</title>
-
-  <link rel="stylesheet" href="{% static 'slickg/slick.grid.css' %}" type="text/css"/>
-  <link rel="stylesheet" href="{% static 'slickg/controls/slick.pager.css' %}" type="text/css"/>
-  <link rel="stylesheet" href="{% static 'slickg/css/smoothness/jquery-ui-1.8.16.custom.css' %}" type="text/css"/>
-  <link rel="stylesheet" href="{% static 'slickg/controls/slick.columnpicker.css' %}" type="text/css"/>
-  <link rel="stylesheet" href="{% static 'slickg/examples/examples.css' %}" type="text/css"/>
+	<title>Tidbit!Edit UI</title>
+	
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<link href="{% static 'css/default.css' %}" rel="stylesheet" type="text/css" />
+	
+	<link rel="stylesheet" href="{% static 'slickg/slick.grid.css' %}" type="text/css"/>
+	<link rel="stylesheet" href="{% static 'slickg/controls/slick.pager.css' %}" type="text/css"/>
+	<link rel="stylesheet" href="{% static 'slickg/css/smoothness/jquery-ui-1.8.16.custom.css' %}" type="text/css"/>
+	<link rel="stylesheet" href="{% static 'slickg/controls/slick.columnpicker.css' %}" type="text/css"/>
+	<link rel="stylesheet" href="{% static 'slickg/examples/examples.css' %}" type="text/css"/>
 
   <style>
-    .slick-cell-checkboxsel {
-      background: #f0f0f0;
-      border-right-color: silver;
-      border-right-style: solid;
-    }
-    .slick-headerrow-column {
-      background: #87ceeb;
-      text-overflow: clip;
-      -moz-box-sizing: border-box;
-      box-sizing: border-box;
-    }
-    .slick-headerrow-column input {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      -moz-box-sizing: border-box;
-      box-sizing: border-box;
-    }
-    .cell-effort-driven {
-      text-align: center;
-    }
+  
+	   .ajaxLoading {  
+		  cursor: progress !important;  
+		} 
+  
+		.button {
+		 	position: relative;
+		    background-color: #fc6; /* Green */
+		    border: none;
+		    color: white;
+		    padding: 6px 3px;
+		    text-align: center;
+		    text-decoration: none;
+		    display: inline-block;
+		    font-size: 14px;
+		    margin: 4px 2px;
+		    -webkit-transition-duration: 0.4s; /* Safari */
+		    transition-duration: 0.4s;
+		    cursor: pointer;
+		}
+		
+		.button1 {
+		width: 150px;
+		    background-color: #fc6; 
+		    color: black; 
+		    border: 2px solid #900;
+		}
+		
+		.button1:hover {
+		    background-color: #900;
+		    color: white;
+		}
 
-    .slick-group-title[level='0'] {
-      font-weight: bold;
-    }
 
-    .slick-group-title[level='1'] {
-      text-decoration: underline;
-    }
-
-    .slick-group-title[level='2'] {
-      font-style: italic;
-    }
+	    .slick-cell-checkboxsel {
+	      background: #f0f0f0;
+	      border-right-color: silver;
+	      border-right-style: solid;
+	    }
+	    .slick-headerrow-column {
+	      background: #87ceeb;
+	      text-overflow: clip;
+	      -moz-box-sizing: border-box;
+	      box-sizing: border-box;
+	    }
+	    .slick-headerrow-column input {
+	      margin: 0;
+	      padding: 0;
+	      width: 100%;
+	      height: 100%;
+	      -moz-box-sizing: border-box;
+	      box-sizing: border-box;
+	    }
+	    .cell-effort-driven {
+	      text-align: center;
+	    }
+	
+	    .slick-group-title[level='0'] {
+	      font-weight: bold;
+	    }
+	
+	    .slick-group-title[level='1'] {
+	      text-decoration: underline;
+	    }
+	
+	    .slick-group-title[level='2'] {
+	      font-style: italic;
+	    }
   </style>
 
 </head>
+
+
 <body>
+<div id="logo" class="center-box">
+	<h3>TidBit - Data Analysis Tool</h3>
+</div>
 
-  <table width="100%">
-    <tr>
-      <td valign="top" width="50%">
-        <div id="myGrid" style="width:700px;height:500px;"></div>
-      </td>
-      <td valign="top">
-        <h2>Data Options</h2>
-        <ul>
-          <li>Please select cell option from list</li>
-        </ul>
-        <button onclick="dataView.collapseAllGroups()">Collapse all groups</button>
-        <br/>
-        <button onclick="dataView.expandAllGroups()">Expand all groups</button>
-        <br/>
-        <button onclick="deleteRows()">Delete Selected Data</button>
-        <br/>
-        <button onclick="undo()"><img src="{% static 'slickg/images/arrow_undo.png' %}" align="absmiddle"> Undo</button>
-        <br/>
-        <input id="find" name="find" type="text" value="find..."/>
-        <input id="replace" name="replace" type="text" value="replace..."/>
-        <button onclick="findReplace()">Find Replace Data</button>
-
-      </td>
-      <td valign="top">
-        <h2>File Options</h2>
-        <ul>
-          <li>Please select file and press process to load data</li>
-        </ul>
-        <!-- Upload form. Note enctype attribute! -->
-          <form action="{% url "upload" %}" method="post" enctype="multipart/form-data">
+<div id="content">
+	<div id="sidebar">
+		<div id="menu" class="left-box">
+			<h2 class="title">File Upload</h2>
+			<div class="content">
+				<ul>
+				  <form action="{% url "index" %}" method="post" enctype="multipart/form-data">
                   {% csrf_token %}
                   <p>{{ form.non_field_errors }}</p>
                   <p>{{ form.docfile.label_tag }} </p>
@@ -89,18 +109,72 @@
                           {{ form.docfile.errors }}
                           {{ form.docfile }}
                   </p>
-                  <p><input type="submit" value="Process" /></p>
+                  <p><input class="button button1" type="submit" value="Load Data" /></p>
           </form>
-        <ul>
-          <li>Convert loaded data to hdf5 file-Download Link Will Apear</li>
-        </ul>
-        <br/>
-        <button onclick="getDataFile()">Generate Data File</button>
-        <br/>
-        <li><a href="/media/documents/data.hdf5" style="display: none;" id="download">Download Link</a></li>
-      </td>
-    </tr>
-  </table>
+				</ul>
+			</div>
+		</div>
+		<div id="updates" class="left-box">
+			<h2 class="title">Data Operations</h2>
+			<div class="content">
+				<ul>
+					<button class="button button1" onclick="dataView.collapseAllGroups()">Collapse all</button>
+			        <br/>
+			         <br/>
+			        <button class="button button1" onclick="dataView.expandAllGroups()">Expand all</button>
+			        <br/>
+			        <br/>
+			        <button class="button button1" onclick="deleteRows()">Delete Selected</button>
+			        <br/>
+			        <br/>
+			        <button class="button button1" onclick="undo()">Undo</button>
+			        <br/>
+			        <br/>
+			        <input id="find" name="find" type="text" value="find..."/>
+			        <input id="replace" name="replace" type="text" value="replace..."/>
+			        <br/>
+			        <button class="button button1" onclick="findReplace()">Find Replace</button>
+				</ul>
+			</div>
+		</div>
+	
+		<div id="updates" class="left-box">
+		<h2 class="title">File Download</h2>
+		<div class="content">
+			<ul>
+		        <button class="button button1" onclick="getDataFile()">Download</button>
+		        <br/>
+		        <a href="/media/documents/data.hdf5" style="display: none;" id="download">Download Link</a>
+		        <br/>
+			    
+			       
+			</ul>
+		</div>
+	</div>
+		
+		
+	</div>
+	<div id="main">
+		<div id="welcome" class="right-box">
+			<h2 class="title">Instructions</h2>
+			<div class="content">
+					<ol>
+					<li>1. Choose File by pressing [Choose File] Button or Press [Load Data] if data is already loaded</li>
+					<li>2. Load Data into Data-Table by pressing [Load Data] Button </li>
+					<li>3. Data Editing will be done directly into Data-Table or by help of [Data Operations] Tab(Left)</li>
+					<li>4. After Data Loading and Editing, Press [Download File] Button</li>
+					<li>5. Download link will appear to download the file in hdf5 format</li>
+				</ol>
+			</div>
+		</div>
+		<div id="example" class="right-box">
+		<h2 class="title">Data Table</h2>
+		  <div id="myGrid" style="width:700px;height:520px;"></div>
+		</div>
+		</div>
+	</div>
+</div>
+
 
 
 
@@ -214,6 +288,15 @@ function groupBySheet() {
         grid.setSelectedRows([]);
       }
     }
+    
+    
+  	$(document).ajaxStart(function(){ 
+    $("body").addClass('ajaxLoading');
+	});
+	
+	$(document).ajaxStop(function(){ 
+	    $("body").removeClass('ajaxLoading');
+	});
 
   function getDataFile() {
 
@@ -229,7 +312,7 @@ function groupBySheet() {
                         $('#download').show();
                     },   // Success Function
                     error: function() {
-                      alert("Error POST JSON DATA");
+                      alert("Unknown Error");
                     }
     }); // AJAX Call
 
@@ -267,7 +350,7 @@ function groupBySheet() {
       }
 
   function loadData() {
-
+  
     data = [];
     var i = 0;
 
@@ -302,6 +385,7 @@ function groupBySheet() {
     {% endfor %}
 
     dataView.setItems(data);
+
   }
 
 
@@ -352,5 +436,7 @@ function groupBySheet() {
     dataView.endUpdate();
   })
 </script>
-</body>
-</html>
+
+<div id="footer" class="center-box">
+	<p id="legal">Copyright &copy; 2016 TidBit. All Rights Reserved.</p>
+</div>
