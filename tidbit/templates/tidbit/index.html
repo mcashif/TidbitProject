@@ -274,18 +274,21 @@ function groupBySheet() {
 
   function deleteRows() {
       var selectedIndexes = grid.getSelectedRows().sort().reverse();
-      var result = confirm("Are you sure you want to delete " + grid.getSelectedRows().length + " row(s)?");
-      if (result) {
-
-        $.each(selectedIndexes, function (index, value) {
-          var item = dataView.getItem(value); //RowNum is the number of the row
-          if (item)
-            dataView.deleteItem(item.id); //RowID is the actual ID of the row and not the row number
-        });
-
-        grid.invalidate();
-        grid.render();
-        grid.setSelectedRows([]);
+      
+      if(grid.getSelectedRows().length>0){
+		      var result = confirm("Are you sure you want to delete " + grid.getSelectedRows().length + " row(s)?");
+		      if (result) {
+		
+					        $.each(selectedIndexes, function (index, value) {
+					          var item = dataView.getItem(value); //RowNum is the number of the row
+					          if (item)
+					            dataView.deleteItem(item.id); //RowID is the actual ID of the row and not the row number
+					        });
+					
+					        grid.invalidate();
+					        grid.render();
+					        grid.setSelectedRows([]);
+		      }
       }
     }
     
@@ -299,29 +302,39 @@ function groupBySheet() {
 	});
 
   function getDataFile() {
-
-            var localJSONData = JSON.stringify(data);
-
-             $.ajax({
-                    type: "POST",
-                    url: "/tidbit/process/",
-                    dataType: "json",
-                    data: {'data': localJSONData},
-                    cache: false,
-                    success: function(data){
-                        $('#download').show();
-                    },   // Success Function
-                    error: function() {
-                      alert("Unknown Error");
-                    }
-    }); // AJAX Call
+  
+  if(data.length>0){
+							$('#download').hide();
+				            var localJSONData = JSON.stringify(data);
+				
+				             $.ajax({
+				                    type: "POST",
+				                    url: "/tidbit/process/",
+				                    dataType: "json",
+				                    data: {'data': localJSONData},
+				                    cache: false,
+				                    success: function(data){
+				                        $('#download').show();
+				                    },   // Success Function
+				                    error: function() {
+				                      alert("Unknown Error");
+				                      $('#download').hide();
+				                    }
+				    }); // AJAX Call
+    
+    }else{
+        alert("Please Load Data");
+        }
 
   }
   function findReplace() {
-
+  
+  		
+		$('#download').hide();
+		
+		if(data.length>0){
         var find = document.getElementById("find").value;
         var replace = document.getElementById("replace").value;
-
         for(i = 0; i<data.length; i++)
         {
 
@@ -347,10 +360,14 @@ function groupBySheet() {
         }
 
           grid.invalidate();
+          
+        }else{
+        alert("Please Load Data");
+        }
       }
 
   function loadData() {
-  
+  	$('#download').hide();
     data = [];
     var i = 0;
 
