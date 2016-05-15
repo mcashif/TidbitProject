@@ -64,7 +64,7 @@ def clear_dir(path_):
         # Raise an exception here to avoid accidentally clearing the content
         # of a symbolic linked directory.
         raise OSError("Cannot call clear_dir() on a symbolic link")
-    
+
 #Helper Functions Excel Data
 def isCellEmpty(cell):
 
@@ -231,14 +231,14 @@ def extractDataFromSheet(sheetformula,sheetvalue,col,row,sheet):
 
 #Process Workbook
 def processWorkBook(path):
-    
+
     #workbook loaded but it display formulas instead of values of formulas so we need two loaded object one with formula and one with value, both work side by side
     workBook = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path)
     #value object
     workBookValued = openpyxl.load_workbook(settings.PROJECT_ROOT+"/media/"+path,data_only=True)
-    
+
     workBookSheets=workBook.get_sheet_names()
-    
+
     listofdData[:] = []
     sheetList[:] = []
 
@@ -265,27 +265,27 @@ def processWorkBook(path):
 @csrf_exempt
 def makeHdfFile(request):
 
-    
+
     if request.is_ajax() and request.POST:
-        
+
         data = request.POST.get("data")
         jObject = json.loads(data)
-        
+
         outfile = hdf.File(settings.PROJECT_ROOT+"/media/documents/data.hdf5",'w')
-        
+
         fr="formula"
         va="value"
         tp="top-label"
         lf="left-label"
         sheet="non"
-        
+
         g1=0
         g2=0
         g3=0
         g4=0
-        
+
         for jo in jObject:
-            
+
             if(sheet==jo['sheet']):
                 fr1=jo['cid']+":"+jo['formula']
                 va1=jo['cid']+":"+jo['value']
@@ -294,8 +294,8 @@ def makeHdfFile(request):
                 dset=g1.create_dataset(fr1, data=jo['cid']+":"+jo['formula'])
                 dset=g2.create_dataset(va1, data=jo['cid']+":"+jo['value'])
                 dset=g3.create_dataset(tp1, data=jo['cid']+":"+jo['topLabel'])
-                dset=g4.create_dataset(lf1, data=jo['cid']+":"+jo['leftLabel'])  
-            
+                dset=g4.create_dataset(lf1, data=jo['cid']+":"+jo['leftLabel'])
+
             if(sheet=="non"):
                 sheet=jo['sheet']
                 grp_sheet = outfile.create_group(sheet)
@@ -311,7 +311,7 @@ def makeHdfFile(request):
                 dset=g2.create_dataset(va1, data=jo['cid']+":"+jo['value'])
                 dset=g3.create_dataset(tp1, data=jo['cid']+":"+jo['topLabel'])
                 dset=g4.create_dataset(lf1, data=jo['cid']+":"+jo['leftLabel'])
-            
+
             if(sheet!=jo['sheet']):
                 sheet=jo['sheet']
                 grp_sheet = outfile.create_group(sheet)
@@ -327,13 +327,13 @@ def makeHdfFile(request):
                 dset=g2.create_dataset(va1, data=jo['cid']+":"+jo['value'])
                 dset=g3.create_dataset(tp1, data=jo['cid']+":"+jo['topLabel'])
                 dset=g4.create_dataset(lf1, data=jo['cid']+":"+jo['leftLabel'])
-   
-      
-                    
-   
+
+
+
+
         outfile.close()
-        
-        
+
+
         filename = settings.PROJECT_ROOT+"/media/documents/data.hdf5"
         response = HttpResponse(content_type='application/force-download')
         response['Content-Disposition'] = 'attachment; filename=%s' % smart_str("data.hdf5")
@@ -341,7 +341,7 @@ def makeHdfFile(request):
         # It's usually a good idea to set the 'Content-Length' header too.
         # You can also set any other required headers: Cache-Control, etc.
         return response
-       
+
     else:
         raise Http404
 
@@ -354,7 +354,7 @@ def index(request):
     if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES)
         if form.is_valid():
-            
+
             #CLear All Old Data in Database and directory
             ExcelFile.objects.all().delete()
             clear_dir(settings.PROJECT_ROOT+"/media/documents/")
@@ -382,3 +382,49 @@ def index(request):
         {'form': form},
         context_instance=RequestContext(request)
     )
+
+#Start Point
+def index2(request):
+
+    # Handle file upload
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+
+            #CLear All Old Data in Database and directory
+            ExcelFile.objects.all().delete()
+            clear_dir(settings.PROJECT_ROOT+"/media/documents/")
+            #////////////////////////////////////////////////////
+            #Read Excel and load into Database for processing, direct uploading can be done to directory but with database we can have record if needed
+            newdoc = ExcelFile(docfile = request.FILES['docfile'])
+            newdoc.save()
+            #entry point to processing of file
+
+            documents=ExcelFile.objects.all();
+
+
+            template = loader.get_template('tidbit/index2.html')
+            context = {
+
+                'documents': documents,
+            }
+
+            return HttpResponse(template.render(context, request))
+    else:
+        form = DocumentForm() # A empty, unbound form
+
+
+    # Render GUI
+    return render_to_response(
+        'tidbit/index2.html',
+        {'form': form},
+        context_instance=RequestContext(request)
+    )
+
+    return HttpResponse(template.render(context, request))
+
+def treeview(request):
+        # Render GUI
+        return render_to_response(
+            'tidbit/tree.html', context_instance=RequestContext(request)
+        )

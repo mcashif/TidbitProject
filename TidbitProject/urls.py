@@ -23,5 +23,6 @@ from django.conf import settings
 urlpatterns = [
     url(r'^tidbit/', include('tidbit.urls')),
     url(r'^admin/', admin.site.urls),
-    url(r'^$', 'tidbit.views.index', name='index'),
+    url(r'^$', 'tidbit.views.index2', name='index2'),
+    url(r'^tree/','tidbit.views.treeview', name='treeview'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
