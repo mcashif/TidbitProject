@@ -423,6 +423,49 @@ def index2(request):
 
     return HttpResponse(template.render(context, request))
 
+
+#Start Point
+def index3(request):
+
+    # Handle file upload
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+
+            #CLear All Old Data in Database and directory
+            ExcelFile.objects.all().delete()
+            clear_dir(settings.PROJECT_ROOT+"/media/documents/")
+            #////////////////////////////////////////////////////
+            #Read Excel and load into Database for processing, direct uploading can be done to directory but with database we can have record if needed
+            newdoc = ExcelFile(docfile = request.FILES['docfile'])
+            newdoc.save()
+            #entry point to processing of file
+
+            documents=ExcelFile.objects.all();
+
+
+            template = loader.get_template('tidbit/index3.html')
+            context = {
+
+                'documents': documents,
+            }
+
+            return HttpResponse(template.render(context, request))
+    else:
+        form = DocumentForm() # A empty, unbound form
+
+
+    # Render GUI
+    return render_to_response(
+        'tidbit/index3.html',
+        {'form': form},
+        context_instance=RequestContext(request)
+    )
+
+    return HttpResponse(template.render(context, request))
+
+
+
 def treeview(request):
         # Render GUI
         return render_to_response(

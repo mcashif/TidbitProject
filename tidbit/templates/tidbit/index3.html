@@ -1,0 +1,43 @@
+<!doctype html>
+{% load staticfiles %}
+<html>
+	<head>
+
+		<link rel='stylesheet' type='text/css' href="{% static 'temp/css/xmltree.css' %}" />
+		<script src='http://code.jquery.com/jquery-1.10.2.min.js'></script>
+
+		<script src="{% static 'temp/script/xmltree.js' %}" ></script>
+
+		<script>
+
+		$(function() {
+
+{% for document in documents %}
+			new XMLTree({
+				fpath: '{{ document.docfile.url }}',
+				container: '#tree',
+				startExpanded: true
+			});
+
+{% endfor %}
+
+		});
+		</script>
+		<title>XML Analysis</title>
+	</head>
+
+  <form action="{% url "index3" %}" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <p>{{ form.non_field_errors }}</p>
+          <p>{{ form.docfile.label_tag }} </p>
+          <p>
+                  {{ form.docfile.errors }}
+                  {{ form.docfile }}
+          </p>
+          <p><input class="button button1" type="submit" value="Load Data" /></p>
+  </form>
+
+	<body>
+		<div id='tree'></div>
+	</body>
+</html>
