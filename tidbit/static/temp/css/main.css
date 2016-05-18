@@ -10,6 +10,13 @@ hr            {height:1px; border:0; background-color:#999;}
 button        {background-color:#f30; color:#fff; border:1px outset #333; font:bold 10px tahoma,helvetica neue,arial; cursor:pointer; -moz-border-radius:3px; -webkit-border-radius:3px;}
 button.cancel {background-color:#999; color:#fff; border:1px outset #666; margin-left:2px;}
 button.icon   {width:14px; height:14px; border:none; padding:0; margin:0; background:transparent url(/static/temp/images/icons.png) no-repeat;}
+input.checkbox{
+    color: green;
+    padding: 25px 25px;
+    -moz-border-radius: 70px;
+    -webkit-border-radius: 70px;
+    border-radius: 70px;
+}
 .msg          {font-weight:normal; font-style:italic;}
 
 
@@ -104,6 +111,7 @@ div#xml ul li button.killNode,
 div#xml ul li button.killChild {background-position:-34px -194px; margin-left:2px;}
 
 div#xml span.comment {font:italic 11px consolas,courier new,monospace; color:#999;}
+
 
 /* xml tree support */
 .treeview    {padding:0; margin:0; list-style:none;}

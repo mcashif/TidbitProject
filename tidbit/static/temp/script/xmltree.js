@@ -130,7 +130,13 @@
 			//build LI and sub-UL for this node (note, tagname is applied as class to LI, for easy post-tree traversal)
 			(this.delve_nextAppendTo ? this.delve_nextAppendTo : this.tree).append((li = $('<li>').addClass(tagName).append(LITxtHolder = $('<span>').addClass('LIText')).append(ul = $('<ul>'))));
 
+      $('#CheckAll').click(function () {
 
+          if ($('#CheckAll').is(':checked') == true) {
+
+               alert(";)");
+        }
+      }
 
 			//plus/mins indicator
       li.append(arrrLI = "<input id=\"checkbox1\" type=\"checkbox\" name=\"vehicle\"> ")

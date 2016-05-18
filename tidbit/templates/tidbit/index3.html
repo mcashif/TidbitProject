@@ -10,19 +10,29 @@
 
 		<script>
 
-		$(function() {
+        $(function() {
 
-{% for document in documents %}
-			new XMLTree({
-				fpath: '{{ document.docfile.url }}',
-				container: '#tree',
-				startExpanded: true
-			});
 
-{% endfor %}
+                      {% for document in documents %}
+                      			new XMLTree({
+                      				fpath: '{{ document.docfile.url }}',
+                      				container: '#tree',
+                      				startExpanded: true
+                      			});
 
-		});
+                      {% endfor %}
+
+
+
+                      $(":checkbox").click(function () {
+                                      var value = $("input:checked").val();
+                                      alert(value);
+
+                                  });
+
+		    });
 		</script>
+
 		<title>XML Analysis</title>
 	</head>
 

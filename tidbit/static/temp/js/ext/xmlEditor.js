@@ -46,8 +46,6 @@
 	- support for UNDO
 */
 
-
-
 /**
  * Logable adds a log method to the passed object.
  * @param obj       {Object}  Object which will get a new log() method
@@ -70,6 +68,8 @@ var loggable = function(obj /* , objName, debugMode */){
 	})(prefix);
 	return obj;
 };
+
+
 
 
 
@@ -233,6 +233,7 @@ var xmlEditor = (function(){
 	 */
 	function _toggleNode(){
 		_$event.trigger("beforeToggleNode");
+
 		var $thisLi = $(this);
 		$thisLi.find(">ul").toggle("normal"); // animate({height:"toggle"});
 		if ($thisLi.hasClass("collapsable")){
@@ -241,6 +242,7 @@ var xmlEditor = (function(){
 		else {
 			$thisLi.removeClass("expandable").addClass("collapsable");
 		}
+
 		_$event.trigger("afterToggleNode");
 	}
 
@@ -316,6 +318,19 @@ var xmlEditor = (function(){
 				})
 				.delegate("li.node", "mouseout", function(){
 					$("#nodePath").empty();
+				})
+				.delegate("input:checkbox", "change", function(){
+
+					// If checked
+					 if (this.checked){
+									$(":checkbox[name=" + this.name + "]").attr('checked', true);
+								 					$(this).parent().find('ul li').slideToggle();
+								} else {
+									$(":checkbox[name=" + this.name + "]").attr('checked', false);
+												
+								}
+
+
 				});
 		},
 
@@ -348,6 +363,7 @@ var xmlEditor = (function(){
 				nodeHtml = '<li class="node ' + node.nodeName + ' '+ state + (isLast?' last':'') +'" nodeIndex="'+nodeIndex+'">' +
 											'<div class="hitarea' + (isLast?' last':'') + '"/>' +
 											'<span class="nodeName">'+ node.nodeName +'</span>' + nodeAttrs + '<button class="killNode icon"/>' +
+												'<input type="checkbox" name='+ node.nodeName +' id="nodeName">' +
 											'<ul class="nodeCore">' +
 												'<li><p class="nodeValue">'+ nodeValueStr +'</p></li>' +
 												'<li class="last"><a href="#" class="addChild">add child</a></li>' +
@@ -356,6 +372,8 @@ var xmlEditor = (function(){
 			}
 			return nodeHtml;
 		},
+
+
 
 
 		/**
@@ -378,6 +396,7 @@ var xmlEditor = (function(){
 					return;
 				}
 				_nodeRefs.push(node); // add node to hash for future reference (cache)
+
 				var $xmlPrevSib = $(node).prev(),
 						realNextSib = _getRealNextSibling(node),
 						nodeHtml    = _self.getNewNodeHTML(node, _initNodeState, !realNextSib),
