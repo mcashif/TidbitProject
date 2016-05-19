@@ -233,7 +233,6 @@ var xmlEditor = (function(){
 	 */
 	function _toggleNode(){
 		_$event.trigger("beforeToggleNode");
-
 		var $thisLi = $(this);
 		$thisLi.find(">ul").toggle("normal"); // animate({height:"toggle"});
 		if ($thisLi.hasClass("collapsable")){
@@ -242,7 +241,6 @@ var xmlEditor = (function(){
 		else {
 			$thisLi.removeClass("expandable").addClass("collapsable");
 		}
-
 		_$event.trigger("afterToggleNode");
 	}
 
@@ -322,13 +320,10 @@ var xmlEditor = (function(){
 				.delegate("input:checkbox", "change", function(){
 
 					// If checked
-					 if (this.checked){
+					 if (this.checked)
 									$(":checkbox[name=" + this.name + "]").attr('checked', true);
-								 					$(this).parent().find('ul li').slideToggle();
-								} else {
+					 else
 									$(":checkbox[name=" + this.name + "]").attr('checked', false);
-												
-								}
 
 
 				});
@@ -363,7 +358,7 @@ var xmlEditor = (function(){
 				nodeHtml = '<li class="node ' + node.nodeName + ' '+ state + (isLast?' last':'') +'" nodeIndex="'+nodeIndex+'">' +
 											'<div class="hitarea' + (isLast?' last':'') + '"/>' +
 											'<span class="nodeName">'+ node.nodeName +'</span>' + nodeAttrs + '<button class="killNode icon"/>' +
-												'<input type="checkbox" name='+ node.nodeName +' id="nodeName">' +
+												'<input type="checkbox" name='+ node.nodeName + nodeValueStr +' id="nodeName">' +
 											'<ul class="nodeCore">' +
 												'<li><p class="nodeValue">'+ nodeValueStr +'</p></li>' +
 												'<li class="last"><a href="#" class="addChild">add child</a></li>' +
