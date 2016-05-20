@@ -339,7 +339,7 @@ var xmlEditor = (function(){
 		 * @returns {String}
 		 * @TODO replace anchor with button
 		 */
-		getNewNodeHTML: function(node, state, isLast){
+		getNewNodeHTML: function(node, state, isLast, parentRefIndex){
 			var nodeIndex    = _nodeRefs.length-1,
 					nodeValue    = _getNodeValue(node),
 					nodeAttrs    = _getEditableAttributesHtml(node),
@@ -358,7 +358,7 @@ var xmlEditor = (function(){
 				nodeHtml = '<li class="node ' + node.nodeName + ' '+ state + (isLast?' last':'') +'" nodeIndex="'+nodeIndex+'">' +
 											'<div class="hitarea' + (isLast?' last':'') + '"/>' +
 											'<span class="nodeName">'+ node.nodeName +'</span>' + nodeAttrs + '<button class="killNode icon"/>' +
-												'<input type="checkbox" name='+ node.nodeName + nodeValueStr +' id="nodeName">' +
+												'<input type="checkbox" name='+ parentRefIndex +node.nodeName + nodeValue +' id="nodeName">' +
 											'<ul class="nodeCore">' +
 												'<li><p class="nodeValue">'+ nodeValueStr +'</p></li>' +
 												'<li class="last"><a href="#" class="addChild">add child</a></li>' +
@@ -394,7 +394,7 @@ var xmlEditor = (function(){
 
 				var $xmlPrevSib = $(node).prev(),
 						realNextSib = _getRealNextSibling(node),
-						nodeHtml    = _self.getNewNodeHTML(node, _initNodeState, !realNextSib),
+						nodeHtml    = _self.getNewNodeHTML(node, _initNodeState, !realNextSib, parentRefIndex),
 						$li         = $(nodeHtml),
 						$ul;
 
