@@ -358,7 +358,7 @@ var xmlEditor = (function(){
 				nodeHtml = '<li class="node ' + node.nodeName + ' '+ state + (isLast?' last':'') +'" nodeIndex="'+nodeIndex+'">' +
 											'<div class="hitarea' + (isLast?' last':'') + '"/>' +
 											'<span class="nodeName">'+ node.nodeName +'</span>' + nodeAttrs + '<button class="killNode icon"/>' +
-												'<input type="checkbox" name='+ node.nodeName + nodeValue +' id="nodeName">' +
+												'<input type="checkbox" name='+ node.parentNode.nodeName + node.nodeName + nodeValueStr +' id="nodeName">' +
 											'<ul class="nodeCore">' +
 												'<li><p class="nodeValue">'+ nodeValueStr +'</p></li>' +
 												'<li class="last"><a href="#" class="addChild">add child</a></li>' +
