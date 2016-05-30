@@ -113,43 +113,6 @@ var xmlEditor = (function(){
 		}
 	}
 
-  var obj="";
-
-	// Changes XML to JSON
-	function xmlToJson(xml) {
-
-	  // Create the return object
-
-
-	  if (xml.nodeType == 1) { // element
-	    // do attributes
-			 obj+="id:"+ "\"" +xml.nodeName+ "\""+ "," ;
-			 obj+="name:"+ "\"" +xml.nodeName+ "\""+ "," ;
-			 obj+="data:"+ "{}"+ "," ;
-			 obj+="children:[" ;
-	  }
-
-	  // do children
-	  if (xml.hasChildNodes()) {
-
-	    for (var i = 0; i < xml.childNodes.length; i++) {
-	        var item = xml.childNodes.item(i);
-					if (item.nodeType == 1){
-					      obj+="{" ;
-                xmlToJson(item);
-								if(_getRealNextSibling(item))
-								   obj+="]}," ;
-								else {
-										if (item.nodeType == 1)
-												obj+="]}" ;
-								}
-							}
-	    }
-
-	  }
-
-	  return obj;
-	};
 
 	/**
 	 * @param  node {Object}
@@ -379,20 +342,29 @@ var xmlEditor = (function(){
 		getNewNodeHTML: function(node, state, isLast){
 			var nodeIndex    = _nodeRefs.length-1,
 					nodeValue    = _getNodeValue(node),
-					nodeAttrs    = _getEditableAttributesHtml(node);
-
-					if (_isCommentNode(node)){ // display comment node
-					nodeHtml = ']' ;
-					}
-					else {
-				  nodeHtml = 'name:' + node.nodeName + ',' ;
-					nodeHtml += 'childern:' + '[' ;
-
-				  if(isLast)
-					   nodeHtml += '},' ;
-					 }
-
-
+					nodeAttrs    = _getEditableAttributesHtml(node),
+					nodeValueStr = (nodeValue) ? nodeValue : "<span class='noValue'>" + _message["noTextValue"] + "</span>";
+					nodeHtml     = "";
+			if (_isCommentNode(node)){ // display comment node
+				nodeHtml = '<li class="node comment '+ state + (isLast?' last':'') +'" nodeIndex="'+nodeIndex+'">' +
+											'<div class="hitarea' + (isLast?' last':'') + '"/>' +
+											'<span class="nodeName">comment</span><button class="killNode icon"/>' +
+											'<ul class="nodeCore">' +
+												'<li class="last"><p class="nodeValue">'+ nodeValueStr +'</p></li>' +
+											'</ul>' +
+										'</li>';
+			}
+			else { // display regular node
+				nodeHtml = '<li class="node ' + node.nodeName + ' '+ state + (isLast?' last':'') +'" nodeIndex="'+nodeIndex+'">' +
+											'<div class="hitarea' + (isLast?' last':'') + '"/>' +
+											'<span class="nodeName">'+ node.nodeName +'</span>' + nodeAttrs + '<button class="killNode icon"/>' +
+												'<input type="checkbox" name='+ node.parentNode.nodeName + node.nodeName + nodeValueStr +' id="nodeName">' +
+											'<ul class="nodeCore">' +
+												'<li><p class="nodeValue">'+ nodeValueStr +'</p></li>' +
+												'<li class="last"><a href="#" class="addChild">add child</a></li>' +
+											'</ul>' +
+										'</li>';
+			}
 			return nodeHtml;
 		},
 
@@ -415,7 +387,6 @@ var xmlEditor = (function(){
 			 * @param node {Object}
 			 */
 			function appendNode(node){
-
 				if (node.nodeType!==1 && !_isCommentNode(node)){ // exit unless regular node or comment
 					return;
 				}
@@ -423,18 +394,44 @@ var xmlEditor = (function(){
 
 				var $xmlPrevSib = $(node).prev(),
 						realNextSib = _getRealNextSibling(node),
-						nodeHtml    = _self.getNewNodeHTML(node, _initNodeState, !realNextSib);
+						nodeHtml    = _self.getNewNodeHTML(node, _initNodeState, !realNextSib),
+						$li         = $(nodeHtml),
+						$ul;
 
-						_self.jsonX+=nodeHtml;
+				_self.log(node.nodeName, parentRefIndex);
 
+				if ($xmlPrevSib.length){ // appending node to previous sibling's parent
+					_self.log("appending to prev sibling's parent");
+					$parent = parentRefs[$xmlPrevSib.attr("parentRefIndex")];
+					$xmlPrevSib.removeAttr("parentRefIndex");
+					$(node).attr("parentRefIndex", parentRefIndex);
+					parentRefs[parentRefIndex] = $parent;
+					parentRefIndex++;
+					$trueParent = $li;
+					$parent.append($li);
+				}
+				else { // appending a new child
+					_self.log("appending new child");
+					if ($trueParent){
+						$parent = $trueParent;
+						$trueParent = false;
+					}
+					/*
+					 @TODO: move ul.children into getNewNodeHTML().
+					 here's how: check if $parent.find("ul.children"), if so use it, if not make root UL
+					 // $ul = ($parent.find(">ul.children").length) ? $parent.find(">ul.children:first") : $("<ul class='root'></ul>");
+					*/
+					$ul = $("<ul class='children'></ul>").append($li);
+					$parent.append($ul);
+					if (!_isCommentNode(node)){
+						$parent = $li;
+						$(node).attr("parentRefIndex", parentRefIndex);
+						parentRefs[parentRefIndex] = $ul;
+						parentRefIndex++;
+					}
+				}
 			} // end of appendNode()
-
-
-
-			//jsonX= xmlToJson(_self.xml);
-			//jsonX+=";";
-			//window.location = "data:text/html," + jsonX
-
+			_traverseDOM(_self.xml, appendNode);
 			$("*", _self.xml).removeAttr("parentRefIndex"); // clean up remaining parentRefIndex-es
 			_self.assignEditHandlers(); // bind in core app afterHtmlRendered
 			$("button.icon").css({opacity:0.5});
@@ -744,176 +741,16 @@ var xmlEditor = (function(){
 
 		/**
 		 * Calls methods for generating HTML representation of XML, then makes it collapsible/expandable
-
-
 		 */
-
-
 		renderTree: function(){
-
-
-					 var labelType, useGradients, nativeTextSupport, animate;
-					 var Log = {
-						 elem: false,
-						 write: function(text){
-							 if (!this.elem)
-								 this.elem = document.getElementById('log');
-							 this.elem.innerHTML = text;
-							 this.elem.style.left = (500 - this.elem.offsetWidth / 2) + 'px';
-						 }
-					 };
-
-					 jsonString=xmlToJson(_self.xml);
-
-
-
-			eval('var json='+jsonString);
-			    //end
-			    //init Spacetree
-			    //Create a new ST instance
-			    var st = new $jit.ST({
-			        //id of viz container element
-			        injectInto: 'infovis',
-			        //set duration for the animation
-			        duration: 800,
-			        //set animation transition type
-			        transition: $jit.Trans.Quart.easeInOut,
-			        //set distance between node and its children
-			        levelDistance: 50,
-			        //enable panning
-			        Navigation: {
-			          enable:true,
-			          panning:true
-			        },
-			        //set node and edge styles
-			        //set overridable=true for styling individual
-			        //nodes or edges
-			        Node: {
-			            height: 20,
-			            width: 60,
-			            type: 'rectangle',
-			            color: '#aaa',
-			            overridable: true
-			        },
-
-			        Edge: {
-			            type: 'bezier',
-			            overridable: true
-			        },
-
-			        onBeforeCompute: function(node){
-			            Log.write("loading " + node.name);
-			        },
-
-			        onAfterCompute: function(){
-			            Log.write("done");
-			        },
-
-			        //This method is called on DOM label creation.
-			        //Use this method to add event handlers and styles to
-			        //your node.
-			        onCreateLabel: function(label, node){
-			            label.id = node.id;
-			            label.innerHTML = node.name;
-			            label.onclick = function(){
-			            	if(normal.checked) {
-			            	  st.onClick(node.id);
-			            	} else {
-			                st.setRoot(node.id, 'animate');
-			            	}
-			            };
-			            //set label styles
-			            var style = label.style;
-			            style.width = 60 + 'px';
-			            style.height = 17 + 'px';
-			            style.cursor = 'pointer';
-			            style.color = '#333';
-			            style.fontSize = '0.8em';
-			            style.textAlign= 'center';
-			            style.paddingTop = '3px';
-			        },
-
-			        //This method is called right before plotting
-			        //a node. It's useful for changing an individual node
-			        //style properties before plotting it.
-			        //The data properties prefixed with a dollar
-			        //sign will override the global node style properties.
-			        onBeforePlotNode: function(node){
-			            //add some color to the nodes in the path between the
-			            //root node and the selected node.
-			            if (node.selected) {
-			                node.data.$color = "#ff7";
-			            }
-			            else {
-			                delete node.data.$color;
-			                //if the node belongs to the last plotted level
-			                if(!node.anySubnode("exist")) {
-			                    //count children number
-			                    var count = 0;
-			                    node.eachSubnode(function(n) { count++; });
-			                    //assign a node color based on
-			                    //how many children it has
-			                    node.data.$color = ['#aaa', '#baa', '#caa', '#daa', '#eaa', '#faa'][count];
-			                }
-			            }
-			        },
-
-			        //This method is called right before plotting
-			        //an edge. It's useful for changing an individual edge
-			        //style properties before plotting it.
-			        //Edge data proprties prefixed with a dollar sign will
-			        //override the Edge global style properties.
-			        onBeforePlotLine: function(adj){
-			            if (adj.nodeFrom.selected && adj.nodeTo.selected) {
-			                adj.data.$color = "#eed";
-			                adj.data.$lineWidth = 3;
-			            }
-			            else {
-			                delete adj.data.$color;
-			                delete adj.data.$lineWidth;
-			            }
-			        }
-			    });
-			    //load json data
-			    st.loadJSON(json);
-			    //compute node positions and layout
-			    st.compute();
-			    //optional: make a translation of the tree
-			    st.geom.translate(new $jit.Complex(-200, 0), "current");
-			    //emulate a click on the root node.
-			    st.onClick(st.root);
-			    //end
-			    //Add event handlers to switch spacetree orientation.
-			    var top = $jit.id('r-top'),
-			        left = $jit.id('r-left'),
-			        bottom = $jit.id('r-bottom'),
-			        right = $jit.id('r-right'),
-			        normal = $jit.id('s-normal');
-
-
-			    function changeHandler() {
-			        if(this.checked) {
-			            top.disabled = bottom.disabled = right.disabled = left.disabled = true;
-			            st.switchPosition(this.value, "animate", {
-			                onComplete: function(){
-			                    top.disabled = bottom.disabled = right.disabled = left.disabled = false;
-			                }
-			            });
-			        }
-			    };
-
-			    top.onchange = left.onchange = bottom.onchange = right.onchange = changeHandler;
-			    //end
-
+			GLR.messenger.show({msg:_message["renderingHtml"], mode:"loading"});
+			_self.renderAsHTML();
+			_self.$container.find("ul:first").addClass("treeview");
+      _self._initNodeState = "expandable";
+			GLR.messenger.inform({msg:_message["readyToEdit"], mode:"success"});
 		}
 
-
 	};
-
-
-
-
-
 
 	// Constructor stuff
 

@@ -466,6 +466,14 @@ def index3(request):
 
 
 
+#Start Point
+def index4(request):
+    template = loader.get_template("tidbit/index4.html")
+    return HttpResponse(template.render())
+
+
+
+
 def treeview(request):
         # Render GUI
         return render_to_response(

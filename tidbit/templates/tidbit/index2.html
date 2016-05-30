@@ -4,14 +4,20 @@
 <head>
 
  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-
-
-
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>XML Editor</title>
-
   <link href="{% static 'temp/css/main.css' %}" type="text/css" rel="stylesheet"/>
   <link href="{% static 'temp/js/ext/GLR/GLR.messenger.css' %}" type="text/css" rel="stylesheet"/>
+  <link type="text/css" href="{% static 'temp/css/base.css' %}" rel="stylesheet" />
+  <link type="text/css" href="{% static 'temp/css/Spacetree.css' %}" rel="stylesheet" />
+
+  <!--[if IE]><script language="javascript" type="text/javascript" src="../../Extras/excanvas.js"></script><![endif]-->
+
+  <!-- JIT Library File -->
+  <script language="javascript" type="text/javascript" src="{% static 'temp/jit-yc.js' %}"></script>
+
+  <!-- Example File -->
+
   <script type="text/javascript" src="{% static 'temp/js/ext/jquery-1.4.4.js' %}"></script>
   <script type="text/javascript" src="{% static 'temp/js/ext/jquery-color.js' %}"></script>
   <script type="text/javascript" src="{% static 'temp/js/ext/GLR/GLR.js' %}"></script>
@@ -41,7 +47,7 @@ xmlEditor._toggle()
   		console.timeEnd("loadingXML");
   		$("#xml").show();
   		$("#actionButtons").show();
-  		xmlEditor.renderTree();
+      xmlEditor.renderTree();
   	  });
       {% endfor %}
   //	$("#todos, #links").height($("#about").height()+"px");
@@ -91,7 +97,7 @@ xmlEditor._toggle()
 
 </head>
 
-<body>
+<body >
 <div id="logo" class="center-box">
 	<h3>XML-Edit - XML Analysis Tool</h3>
 </div>
@@ -145,6 +151,74 @@ xmlEditor._toggle()
 		</div>
 		<div id="example" class="right-box">
 		<h2 class="title">XML Data View</h2>
+    <div id="container">
+    <div id="center-container">
+        <div id="infovis"></div>
+    </div>
+
+    <div id="right-container">
+
+    <h4>Tree Orientation</h4>
+    <table>
+        <tr>
+            <td>
+                <label for="r-left">Left </label>
+            </td>
+            <td>
+                <input type="radio" id="r-left" name="orientation" checked="checked" value="left" />
+            </td>
+        </tr>
+        <tr>
+             <td>
+                <label for="r-top">Top </label>
+             </td>
+             <td>
+                <input type="radio" id="r-top" name="orientation" value="top" />
+             </td>
+        </tr>
+        <tr>
+             <td>
+                <label for="r-bottom">Bottom </label>
+              </td>
+              <td>
+                <input type="radio" id="r-bottom" name="orientation" value="bottom" />
+              </td>
+        </tr>
+        <tr>
+              <td>
+                <label for="r-right">Right </label>
+              </td>
+              <td>
+               <input type="radio" id="r-right" name="orientation" value="right" />
+              </td>
+        </tr>
+    </table>
+
+    <h4>Selection Mode</h4>
+    <table>
+        <tr>
+            <td>
+                <label for="s-normal">Normal </label>
+            </td>
+            <td>
+                <input type="radio" id="s-normal" name="selection" checked="checked" value="normal" />
+            </td>
+        </tr>
+        <tr>
+             <td>
+                <label for="s-root">Set as Root </label>
+             </td>
+             <td>
+                <input type="radio" id="s-root" name="selection" value="root" />
+             </td>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="log"></div>
+    </div>
+    </div>
 		</div>
 		</div>
 	</div>
