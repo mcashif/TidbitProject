@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+{% load staticfiles %}
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <title>XML Editor</title>
+
+  <script type="text/javascript" src="{% static 'temp/js/ext/jquery-1.4.4.js' %}"></script>
+  <script type="text/javascript" src="{% static 'temp/js/ext/jquery-color.js' %}"></script>
+  <script type="text/javascript" src="{% static 'temp/js/ext/xmlEditor.js' %}"></script>
+
+
+  <script type="text/javascript">
+
+
+  $(document).ready(function(){
+
+    {% for document in documents %}
+    console.time("loadingXML");
+    xmlEditor.loadXmlFromFile("{{ document.docfile.url }}", function(){
+    console.timeEnd("loadingXML");
+    xmlEditor.processXML();
+    });
+    {% endfor %}
+  //	$("#todos, #links").height($("#about").height()+"px");
+  });
+
+
+
+
+  </script>
+
+
+
+  <form action="{% url "index6" %}" method="post" enctype="multipart/form-data">
+
+          {% csrf_token %}
+          <p>{{ form.non_field_errors }}</p>
+          <p>{{ form.docfile.label_tag }} </p>
+          <p>
+                  {{ form.docfile.errors }}
+                  {{ form.docfile }}
+          </p>
+          <p><input type="submit" value="Load Data" /></p>
+  </form>
+
+  <body>
+    <div id='tree'></div>
+  </body>
+
+  </html>

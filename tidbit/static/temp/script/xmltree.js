@@ -159,7 +159,7 @@
 				if (attrs) {
 					for(var i=0; i<attrs.length; i++) {
 						if (attrs[i].value) {
-							ul.append(attrLI = $('<li>').append($('<span>', {text: "attrs[i].value"}).addClass('attrValue')).addClass('attr '+attrs[i].name).prepend($('<span>', {text: '@'+attrs[i].name+':'})));
+							ul.append(attrLI = $('<li>').append($('<span>', {text: attrs[i].value}).addClass('attrValue')).addClass('attr '+attrs[i].name).prepend($('<span>', {text: '@'+attrs[i].name+':'})));
               if (jdo.attrs && jdo.attrs == 'hidden') attrLI.hide();
 						}
 					}

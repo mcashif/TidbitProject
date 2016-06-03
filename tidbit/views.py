@@ -15,6 +15,8 @@ import json
 import os
 import stat
 import shutil
+import xml.etree.ElementTree as ET
+
 
 
 #Global Data
@@ -472,7 +474,88 @@ def index4(request):
     return HttpResponse(template.render())
 
 
+#Start Point
+def index5(request):
+    template = loader.get_template("tidbit/index5.html")
+    return HttpResponse(template.render())
 
+
+
+
+
+
+
+
+def elements_equal(e1, e2):
+
+    if type(e1) != type(e2):
+        return False
+    if e1.tag != e1.tag: return False
+    if e1.text != e2.text: return False
+    if e1.tail != e2.tail: return False
+    if e1.attrib != e2.attrib: return False
+    if len(e1) != len(e2): return False
+    return all([elements_equal(c1, c2) for c1, c2 in zip(e1, e2)])
+
+
+
+
+
+#Start Point
+def index7(request):
+    # Handle file upload
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+
+            #CLear All Old Data in Database and directory
+            ExcelFile.objects.all().delete()
+            clear_dir(settings.PROJECT_ROOT+"/media/documents/")
+            #////////////////////////////////////////////////////
+            #Read Excel and load into Database for processing, direct uploading can be done to directory but with database we can have record if needed
+            newdoc = ExcelFile(docfile = request.FILES['docfile'])
+            newdoc.save()
+            #entry point to processing of file
+
+            tree = ET.parse(settings.PROJECT_ROOT+"/media/"+newdoc.docfile.name)
+            root = tree.getroot()
+            prev = None
+            for page in root:                     # iterate over pages
+                elems_to_remove = []
+                for elem in page:
+                    if elements_equal(elem, prev):
+                        print("found duplicate: %s" % elem.text)   # equal function works well
+                        elems_to_remove.append(elem)
+                        continue
+                    prev = elem
+                for elem_to_remove in elems_to_remove:
+                    page.remove(elem_to_remove)
+            # [...]
+            tree.write(settings.PROJECT_ROOT+"/media/"+newdoc.docfile.name)
+
+
+            documents=ExcelFile.objects.all();
+
+
+            template = loader.get_template('tidbit/index7.html')
+            context = {
+
+                'documents': documents,
+            }
+
+            return HttpResponse(template.render(context, request))
+    else:
+        form = DocumentForm() # A empty, unbound form
+
+
+    # Render GUI
+    return render_to_response(
+        'tidbit/index7.html',
+        {'form': form},
+        context_instance=RequestContext(request)
+    )
+
+    return HttpResponse(template.render(context, request))
 
 def treeview(request):
         # Render GUI

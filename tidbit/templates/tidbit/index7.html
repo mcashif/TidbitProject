@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+{% load staticfiles %}
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <title>XML Editor</title>
+
+  <link rel='stylesheet' type='text/css' href="{% static 'temp/css/xmltree.css' %}" />
+  <script src='http://code.jquery.com/jquery-1.10.2.min.js'></script>
+  <script src="{% static 'temp/script/xmltree.js' %}" ></script>
+  <script type="text/javascript" src="{% static 'temp/js/ext/xmlEditor.js' %}"></script>
+
+
+  <script type="text/javascript">
+
+
+  $(document).ready(function(){
+
+    {% for document in documents %}
+    console.time("loadingXML");
+    xmlEditor.loadXmlFromFile("{{ document.docfile.url }}","#tree",function(){
+    console.timeEnd("loadingXML");
+    xmlEditor.renderTree();
+    });
+    {% endfor %}
+  //	$("#todos, #links").height($("#about").height()+"px");
+  });
+
+
+
+
+  </script>
+
+
+</head>
+
+<form action="{% url "index7" %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>{{ form.non_field_errors }}</p>
+        <p>{{ form.docfile.label_tag }} </p>
+        <p>
+                {{ form.docfile.errors }}
+                {{ form.docfile }}
+        </p>
+        <p><input class="button button1" type="submit" value="Load Data" /></p>
+</form>
+
+<body>
+  <div id='tree'></div>
+</body>
+
+</html>
