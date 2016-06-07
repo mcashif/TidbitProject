@@ -543,7 +543,7 @@ def populateDB(path):
 
                 if etree.iselement(el.getparent()):
                     parent= el.getparent().tag
-                
+
 
 
                 newRecord = XMLData(nodeName = el.tag, nodeparentName = parent, nodeattribute = str(dict(el.attrib)), nodedata =  el.text)
@@ -612,12 +612,12 @@ def index7(request):
             newdoc.save()
             #entry point to processing of file
 
-            readNodes(newdoc.docfile.name)
+            #readNodes(newdoc.docfile.name)
             populateDB(newdoc.docfile.name)
 
             documents=ExcelFile.objects.all();
 
-            readNodes(newdoc.docfile.name)
+            #readNodes(newdoc.docfile.name)
 
             template = loader.get_template('tidbit/index7.html')
             context = {
