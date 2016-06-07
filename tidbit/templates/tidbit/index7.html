@@ -48,7 +48,61 @@
 </form>
 
 <body>
+
+<select id="nodeList">
+
+      {% for item in  textNodes %}
+          <option value="{{ item.3 }}">{{ item.5 }}</option>
+      {% endfor %}
+
+</select>
+
+<textarea id="nodeText">
+This is where you see text...
+</textarea>
+<textarea id="nodeText2">
+This is where you see text...
+</textarea>
+
+
   <div id='tree'></div>
 </body>
 
 </html>
+
+<script>
+
+function putIt(e) {
+    $("#nodeText").val(e.target.value);
+    create_xml();
+}
+
+$("#nodeList").on("change", putIt);
+
+
+/// AJAX for posting
+function create_xml() {
+    console.log("create post is working!") // sanity check
+    var sel = document.getElementById('nodeList');
+    $.ajax({
+        url : "makexml/", // the endpoint
+        type : "POST", // http method
+        data : { nodeIndex : sel.selectedIndex }, // data sent with the post request
+
+        // handle a successful response
+        success : function(json) {
+            $('#nodeText2').val(JSON.stringify(json)); // remove the value from the input
+            console.log(json); // log the returned json to the console
+            console.log("success"); // another sanity check
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#nodeText').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+};
+
+</script>

@@ -15,14 +15,16 @@ import json
 import os
 import stat
 import shutil
-import xml.etree.ElementTree as ET
+from lxml import etree
+import shutil
 
 
 
 #Global Data
 listofdData=[]
 sheetList=[]
-
+textNodes=[]
+xmlPath=""
 
 #Helper Function Remove Directory
 def _remove_readonly(fn, path_, excinfo):
@@ -501,6 +503,80 @@ def elements_equal(e1, e2):
 
 
 
+#////////////////XML////////////////////////////////////////////////////
+
+def isendNode(node):
+
+    if(node.getchildren()):
+      return False
+    else:
+      return True
+
+def isendNodeWithText(node):
+
+    if(node.getchildren()):
+      return False
+    else:
+        return (node.text and node.text.strip()) or None
+
+
+def makeXMLFromNode(node):
+
+    xmlList=[]
+    nodeX=node
+
+    while etree.iselement(nodeX):
+             nodeX=nodeX.getparent()
+             if etree.iselement(nodeX):
+                 xmlList.append(nodeX)
+
+    return xmlList
+
+
+def readNodes(path):
+    xmlPath=path
+    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
+
+    textNodes[:] = []
+
+    for el in tree.iter():
+        if(isendNodeWithText(el)):
+            d = dict(el.attrib)
+            textNodes.append([el,el.getparent(),el.tag,el.text,d,el.tag+"-"+ str(d)])
+
+    return textNodes
+
+
+#Start Point
+@csrf_exempt
+def makexml(request):
+
+    if request.is_ajax() and request.POST:
+
+        post_text = request.POST.get('nodeIndex')
+        response_data = {}
+
+        result=makeXMLFromNode(textNodes[int(post_text)][0])
+
+        strResult=""
+
+        for i in range(0, len(result)):
+            strResult=strResult+"["+result[i].tag+"]"
+
+
+        response_data['result'] = strResult
+
+
+        return HttpResponse(
+            json.dumps(response_data),
+            content_type="application/json"
+        )
+    else:
+        return HttpResponse(
+            json.dumps({"nothing to see": "this isn't happening"}),
+            content_type="application/json"
+        )
+
 #Start Point
 def index7(request):
     # Handle file upload
@@ -517,29 +593,21 @@ def index7(request):
             newdoc.save()
             #entry point to processing of file
 
-            tree = ET.parse(settings.PROJECT_ROOT+"/media/"+newdoc.docfile.name)
-            root = tree.getroot()
-            prev = None
-            for page in root:                     # iterate over pages
-                elems_to_remove = []
-                for elem in page:
-                    if elements_equal(elem, prev):
-                        print("found duplicate: %s" % elem.text)   # equal function works well
-                        elems_to_remove.append(elem)
-                        continue
-                    prev = elem
-                for elem_to_remove in elems_to_remove:
-                    page.remove(elem_to_remove)
-            # [...]
-            tree.write(settings.PROJECT_ROOT+"/media/"+newdoc.docfile.name)
+            readNodes(newdoc.docfile.name)
+
+
 
 
             documents=ExcelFile.objects.all();
 
 
+
+            readNodes(newdoc.docfile.name)
+
+
             template = loader.get_template('tidbit/index7.html')
             context = {
-
+                'textNodes' : textNodes,
                 'documents': documents,
             }
 

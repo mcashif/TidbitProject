@@ -24,5 +24,6 @@ urlpatterns = [
     url(r'^tidbit/', include('tidbit.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^$', 'tidbit.views.index7', name='index7'),
+    url(r'^makexml/', 'tidbit.views.makexml', name='makexml'),
     url(r'^tree/','tidbit.views.treeview', name='treeview'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
