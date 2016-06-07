@@ -27,10 +27,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+ADMIN_SITE_HEADER = "XML Database"
 # Application definition
 
 INSTALLED_APPS = [
+    'import_export',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

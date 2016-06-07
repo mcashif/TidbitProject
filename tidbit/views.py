@@ -1,6 +1,6 @@
 
 from .forms import DocumentForm
-from .models import ExcelFile
+from .models import ExcelFile,XMLData
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.conf import settings
@@ -532,6 +532,25 @@ def makeXMLFromNode(node):
 
     return xmlList
 
+def populateDB(path):
+
+    parent="Root"
+
+    XMLData.objects.all().delete()
+    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
+    for el in tree.iter():
+             if etree.iselement(el):
+
+                if etree.iselement(el.getparent()):
+                    parent= el.getparent().tag
+                
+
+
+                newRecord = XMLData(nodeName = el.tag, nodeparentName = parent, nodeattribute = str(dict(el.attrib)), nodedata =  el.text)
+                newRecord.save()
+
+
+
 
 def readNodes(path):
     xmlPath=path
@@ -594,16 +613,11 @@ def index7(request):
             #entry point to processing of file
 
             readNodes(newdoc.docfile.name)
-
-
-
+            populateDB(newdoc.docfile.name)
 
             documents=ExcelFile.objects.all();
 
-
-
             readNodes(newdoc.docfile.name)
-
 
             template = loader.get_template('tidbit/index7.html')
             context = {

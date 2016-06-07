@@ -1,6 +1,15 @@
 from django.contrib import admin
-from .models import ExcelFile
+from .models import ExcelFile,XMLData
+from import_export.admin import ImportExportModelAdmin
 
 # Register your models here.
 # Register your models here.
-admin.site.register(ExcelFile)
+
+class XMLDataAdmin(ImportExportModelAdmin):
+
+    show_full_result_count = True
+    list_display = ('nodeName','nodeparentName','nodeattribute', 'nodedata',)
+    list_filter = ('nodeName','nodeparentName',)
+    search_fields = ['nodeName']
+
+admin.site.register(XMLData,XMLDataAdmin)
