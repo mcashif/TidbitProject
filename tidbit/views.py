@@ -555,6 +555,18 @@ def getParentID(node):
 
     return 0
 
+def getTxtData(el):
+
+    txtData=""
+
+    if(el.text):
+        txtData=el.text
+    else:
+        if(el.tail):
+            txtData=el.tail
+
+    return txtData
+
 def populateDB(path):
 
     parent="Root"
@@ -572,7 +584,8 @@ def populateDB(path):
                     idParent=getParentID(el)
 
                 link=tree.getpath(el)
-                newRecord = XMLData(nodeName = el.tag, nodeparentName = parent, nodeparentCode = idParent ,nodeattribute = str(dict(el.attrib)), nodedata =  el.text, linktoparent= link)
+                txtData=getTxtData(el)
+                newRecord = XMLData(nodeName = el.tag, nodeparentName = parent, nodeparentCode = idParent ,nodeattribute = str(dict(el.attrib)), nodedata =  txtData, linktoparent= link)
                 newRecord.save()
                 dbNodes.append([el,newRecord.id])
 
@@ -627,7 +640,7 @@ def cleanXML(path):
             num=""
             with io.open(settings.PROJECT_ROOT+"/media/"+path, "r", encoding="utf-8") as my_file:
                   my_unicode_string = my_file.read()
-                  num = re.sub(r'<QOis4/>', "", my_unicode_string)
+                  num = re.sub(r'<QOis4/>', "||", my_unicode_string)
 
 
             with io.open(settings.PROJECT_ROOT+"/media/"+path, "w", encoding="utf-8") as my_file:
@@ -648,7 +661,7 @@ def index7(request):
             newdoc.save()
             #entry point to processing of file
 
-            cleanXML(newdoc.docfile.name)
+            #cleanXML(newdoc.docfile.name)
 
             #readNodes(newdoc.docfile.name)
             populateDB(newdoc.docfile.name)
