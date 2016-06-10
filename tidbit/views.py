@@ -17,6 +17,8 @@ import stat
 import shutil
 from lxml import etree
 import shutil
+import re
+import io
 
 
 
@@ -621,7 +623,15 @@ def makexml(request):
             json.dumps({"nothing to see": "this isn't happening"}),
             content_type="application/json"
         )
+def cleanXML(path):
+            num=""
+            with io.open(settings.PROJECT_ROOT+"/media/"+path, "r", encoding="utf-8") as my_file:
+                  my_unicode_string = my_file.read()
+                  num = re.sub(r'<QOis4/>', "", my_unicode_string)
 
+
+            with io.open(settings.PROJECT_ROOT+"/media/"+path, "w", encoding="utf-8") as my_file:
+                 my_file.write(num)
 #Start Point
 def index7(request):
     # Handle file upload
@@ -637,6 +647,8 @@ def index7(request):
             newdoc = ExcelFile(docfile = request.FILES['docfile'])
             newdoc.save()
             #entry point to processing of file
+
+            cleanXML(newdoc.docfile.name)
 
             #readNodes(newdoc.docfile.name)
             populateDB(newdoc.docfile.name)
