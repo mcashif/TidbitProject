@@ -8,7 +8,7 @@ from import_export.admin import ImportExportModelAdmin
 class XMLDataAdmin(ImportExportModelAdmin):
 
     show_full_result_count = True
-    list_display = ('nodeName','nodeparentName','nodeattribute', 'nodedata','nodeparentCode','linktoparent')
+    list_display = ('id','nodeName','nodeparentName','nodeattribute', 'nodedata','nodeparentCode','linktoparent')
     list_filter = ('nodeName','nodeparentName',)
     search_fields = ['nodeName']
 
