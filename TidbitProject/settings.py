@@ -77,10 +77,14 @@ WSGI_APPLICATION = 'TidbitProject.wsgi.application'
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+               'default': {
+                    'ENGINE': 'django.db.backends.mysql',
+                    'NAME': 'tidbit$XMLDatabase',
+                    'USER': 'tidbit',
+                    'PASSWORD': 'abc12345',
+                    'HOST': 'tidbit.mysql.pythonanywhere-services.com', # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+                    'PORT': '', # Set to empty string for default.
+       }
 }
 
 
