@@ -24,6 +24,7 @@ import shutil
 listofdData=[]
 sheetList=[]
 textNodes=[]
+dbNodes=[]
 xmlPath=""
 
 #Helper Function Remove Directory
@@ -532,9 +533,32 @@ def makeXMLFromNode(node):
 
     return xmlList
 
+def makeXMLFromNodeStr(node):
+
+    strList=node.tag
+    nodeX=node
+
+    while etree.iselement(nodeX):
+             nodeX=nodeX.getparent()
+             if etree.iselement(nodeX):
+                 strList=strList+"->"+nodeX.tag
+
+    return strList
+
+def getParentID(node):
+
+    for i in range(0, len(dbNodes)):
+        if(dbNodes[i][0]==node.getparent()):
+            return dbNodes[i][1]
+
+    return 0
+
 def populateDB(path):
 
     parent="Root"
+    idParent=0
+    dbNodes[:] = []
+
 
     XMLData.objects.all().delete()
     tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
@@ -543,11 +567,13 @@ def populateDB(path):
 
                 if etree.iselement(el.getparent()):
                     parent= el.getparent().tag
+                    idParent=getParentID(el)
 
-
-
-                newRecord = XMLData(nodeName = el.tag, nodeparentName = parent, nodeattribute = str(dict(el.attrib)), nodedata =  el.text)
+                link=tree.getpath(el)
+                newRecord = XMLData(nodeName = el.tag, nodeparentName = parent, nodeparentCode = idParent ,nodeattribute = str(dict(el.attrib)), nodedata =  el.text, linktoparent= link)
                 newRecord.save()
+                dbNodes.append([el,newRecord.id])
+
 
 
 
@@ -617,7 +643,7 @@ def index7(request):
 
             documents=ExcelFile.objects.all();
 
-            #readNodes(newdoc.docfile.name)
+            readNodes(newdoc.docfile.name)
 
             template = loader.get_template('tidbit/index7.html')
             context = {
