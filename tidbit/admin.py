@@ -10,6 +10,6 @@ class XMLDataAdmin(ImportExportModelAdmin):
     show_full_result_count = True
     list_display = ('id','nodeName','nodeparentName','nodeattribute', 'nodedata','nodeparentCode','linktoparent')
     list_filter = ('nodeName','nodeparentName',)
-    search_fields = ['id','nodeName']
+    search_fields = ['id','nodeName','nodedata',]
 
 admin.site.register(XMLData,XMLDataAdmin)

@@ -636,7 +636,8 @@ def makexml(request):
             json.dumps({"nothing to see": "this isn't happening"}),
             content_type="application/json"
         )
-def cleanXML(path):
+
+def cleanXML2(path):
             num=""
             with io.open(settings.PROJECT_ROOT+"/media/"+path, "r", encoding="utf-8") as my_file:
                   my_unicode_string = my_file.read()
@@ -645,6 +646,56 @@ def cleanXML(path):
 
             with io.open(settings.PROJECT_ROOT+"/media/"+path, "w", encoding="utf-8") as my_file:
                  my_file.write(num)
+
+
+def getRealNext(node):
+
+
+    for el in node.findall('.//'):
+        if el==node:
+            continue
+        if etree.iselement(el):
+           return el
+
+    return False
+
+def cleanXMLLevel2(path):
+
+    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
+
+
+    for el in tree.iter():
+             if etree.iselement(el):
+                    nextReal= getRealNext(el)
+                    if etree.iselement(nextReal) and isendNode(nextReal):
+                        strVal=str(etree.tostring(nextReal))
+                        if "/>" in strVal:
+                            tag=nextReal.tag
+                            strText=el.text
+                            el.text=""
+                            sub_node_element = etree.XML("<" + tag + "/>")
+                            el.insert(0,sub_node_element)
+                            sub_node_element.tail=strText
+
+
+    tree.write(settings.PROJECT_ROOT+"/media/"+path, pretty_print=True)
+
+
+def cleanXMLLevel1(path):
+
+    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
+
+
+    for el in tree.iter():
+             if etree.iselement(el):
+                if el.text==":" :
+                    if isendNode(el):
+                        el.getparent().text=el.getparent().text+":"
+                        el.getparent().remove(el)
+
+
+    tree.write(settings.PROJECT_ROOT+"/media/"+path, pretty_print=True)
+
 #Start Point
 def index7(request):
     # Handle file upload
@@ -661,7 +712,8 @@ def index7(request):
             newdoc.save()
             #entry point to processing of file
 
-            #cleanXML(newdoc.docfile.name)
+            cleanXMLLevel1(newdoc.docfile.name)
+            cleanXMLLevel2(newdoc.docfile.name)
 
             #readNodes(newdoc.docfile.name)
             populateDB(newdoc.docfile.name)
