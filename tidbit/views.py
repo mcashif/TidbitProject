@@ -19,6 +19,12 @@ from lxml import etree
 import shutil
 import re
 import io
+from .serializers import XMLSerializer
+from rest_framework import routers, serializers, viewsets
+from rest_framework.parsers import MultiPartParser,FileUploadParser,FormParser
+from rest_framework.response import Response
+
+
 
 
 
@@ -575,7 +581,8 @@ def populateDB(path):
 
 
     XMLData.objects.all().delete()
-    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
+    parser = etree.XMLParser(load_dtd= True)
+    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path,parser)
     for el in tree.iter():
              if etree.iselement(el):
 
@@ -588,6 +595,7 @@ def populateDB(path):
                 newRecord = XMLData(nodeName = el.tag, nodeparentName = parent, nodeparentCode = idParent ,nodeattribute = str(dict(el.attrib)), nodedata =  txtData, linktoparent= link)
                 newRecord.save()
                 dbNodes.append([el,newRecord.id])
+                print("OK")
 
 
 
@@ -595,7 +603,11 @@ def populateDB(path):
 
 def readNodes(path):
     xmlPath=path
-    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
+
+    utf8_parser = etree.XMLParser(load_dtd= True)
+
+    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path,utf8_parser)
+
 
     textNodes[:] = []
 
@@ -661,7 +673,8 @@ def getRealNext(node):
 
 def cleanXMLLevel2(path):
 
-    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
+    parser = etree.XMLParser(load_dtd= True)
+    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path,parser)
 
 
     for el in tree.iter():
@@ -683,7 +696,8 @@ def cleanXMLLevel2(path):
 
 def cleanXMLLevel1(path):
 
-    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path)
+    parser = etree.XMLParser(load_dtd= True)
+    tree = etree.parse(settings.PROJECT_ROOT+"/media/"+path,parser)
 
 
     for el in tree.iter():
@@ -715,12 +729,11 @@ def index7(request):
             cleanXMLLevel1(newdoc.docfile.name)
             cleanXMLLevel2(newdoc.docfile.name)
 
-            #readNodes(newdoc.docfile.name)
             populateDB(newdoc.docfile.name)
 
             documents=ExcelFile.objects.all();
 
-            readNodes(newdoc.docfile.name)
+            #readNodes(newdoc.docfile.name)
 
             template = loader.get_template('tidbit/index7.html')
             context = {
@@ -747,3 +760,31 @@ def treeview(request):
         return render_to_response(
             'tidbit/tree.html', context_instance=RequestContext(request)
         )
+
+
+# ViewSets define the view behavior.
+class XMLViewSet(viewsets.ModelViewSet):
+
+        queryset = ExcelFile.objects.all()
+        serializer_class = XMLSerializer
+        parser_classes = (MultiPartParser,FormParser,)
+        def put(self, request, format=None):
+
+            #CLear All Old Data in Database and directory
+            ExcelFile.objects.all().delete()
+            #////////////////////////////////////////////////////
+            #Read Excel and load into Database for processing, direct uploading can be done to directory but with database we can have record if needed
+            newdoc = ExcelFile(docfile = request.FILES['docfile'])
+            newdoc.save()
+
+            cleanXMLLevel1(newdoc.docfile.name)
+            cleanXMLLevel2(newdoc.docfile.name)
+
+            populateDB(newdoc.docfile.name)
+
+            # ...
+            # do some stuff with uploaded file
+            # ...
+
+
+            return Response(status=202)

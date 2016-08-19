@@ -38,7 +38,7 @@ function _cleanXMLStr(xmlStr) {
   //  xmlStr = xmlStr.replace(/> {1,}|>\t{1,}/g, '>'); //replace trailing spaces and tabs
     xmlStr = xmlStr.replace(/<\?[^>]*\?>/g, ''); //delete docType tags
 
-    xmlStr = replaceSelfClosingTags(xmlStr); //replace self closing tags
+  //  xmlStr = replaceSelfClosingTags(xmlStr); //replace self closing tags
     //xmlStr = replaceAloneValues(xmlStr); //replace the alone tags values
   //  xmlStr = replaceAttributes(xmlStr); //replace attributes
 

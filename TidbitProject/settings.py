@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tidbit',
+    'rest_framework',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -76,15 +77,24 @@ WSGI_APPLICATION = 'TidbitProject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
+#DATABASES = {
+#               'default': {
+#                    'ENGINE': 'django.db.backends.mysql',
+#                    'NAME': 'xmlparse.mysql.pythonanywhere-services.com',
+#                    'USER': 'xmlparse',
+#                    'PASSWORD': 'test1234',
+#                    'HOST': '', # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+#                    'PORT': '', # Set to empty string for default.
+#       }
+#}
+
+
 DATABASES = {
-               'default': {
-                    'ENGINE': 'django.db.backends.mysql',
-                    'NAME': 'tidbit$XMLDatabase',
-                    'USER': 'tidbit',
-                    'PASSWORD': 'abc12345',
-                    'HOST': 'tidbit.mysql.pythonanywhere-services.com', # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-                    'PORT': '', # Set to empty string for default.
-       }
+
+                'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
 
 
@@ -106,6 +116,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
