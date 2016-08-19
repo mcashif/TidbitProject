@@ -19,22 +19,9 @@ from django.contrib import admin
 from django.conf.urls import include
 from django.conf.urls.static import static
 from django.conf import settings
-admin.site.site_header = settings.ADMIN_SITE_HEADER
-from django.contrib.auth.models import User
-from rest_framework import routers
-from tidbit.views import XMLViewSet
-
-# Routers provide an easy way of automatically determining the URL conf.
-router = routers.DefaultRouter()
-router.register(r'test', XMLViewSet)
-
 
 urlpatterns = [
     url(r'^tidbit/', include('tidbit.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^$', 'tidbit.views.index', name='index'),
-    url(r'^makexml/', 'tidbit.views.makexml', name='makexml'),
-    url(r'^tree/','tidbit.views.treeview', name='treeview'),
-    url(r'^', include(router.urls)),
-    url(r'^api/', include('rest_framework.urls', namespace='rest_framework'))
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
